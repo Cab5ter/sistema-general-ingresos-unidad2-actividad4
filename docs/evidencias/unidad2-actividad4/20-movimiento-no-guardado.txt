@@ -1,0 +1,8 @@
+SELECT COUNT(*) AS movimientos_rechazados_guardados FROM transactions WHERE short_description='Pedro consulta 7977002'
+
++----------------------------------+
+| movimientos_rechazados_guardados |
++----------------------------------+
+| 0                                |
++----------------------------------+
+1 filas

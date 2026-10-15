@@ -1,0 +1,8 @@
+SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM permissions) AS permisos, (SELECT COUNT(*) FROM role_permissions WHERE is_active=1) AS relaciones_activas, (SELECT COUNT(*) FROM role_permissions WHERE is_active=0) AS relaciones_inactivas
+
++-------+----------+--------------------+----------------------+
+| roles | permisos | relaciones_activas | relaciones_inactivas |
++-------+----------+--------------------+----------------------+
+| 4     | 10       | 26                 | 2                    |
++-------+----------+--------------------+----------------------+
+1 filas

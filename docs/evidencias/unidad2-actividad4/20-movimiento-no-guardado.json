@@ -1,0 +1,12 @@
+{
+  "motor": "MySQL 8.4.7",
+  "consulta": "SELECT COUNT(*) AS movimientos_rechazados_guardados FROM transactions WHERE short_description='Pedro consulta 7977002'",
+  "columnas": [
+    "movimientos_rechazados_guardados"
+  ],
+  "filas": [
+    [
+      0
+    ]
+  ]
+}

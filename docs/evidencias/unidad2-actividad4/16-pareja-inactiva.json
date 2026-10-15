@@ -1,0 +1,18 @@
+{
+  "motor": "MySQL 8.4.7",
+  "consulta": "SELECT rp.id,r.code AS rol,p.code AS permiso,rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id WHERE r.code='CAPTURISTA' AND p.code='accounts.write'",
+  "columnas": [
+    "id",
+    "rol",
+    "permiso",
+    "is_active"
+  ],
+  "filas": [
+    [
+      27,
+      "CAPTURISTA",
+      "accounts.write",
+      0
+    ]
+  ]
+}

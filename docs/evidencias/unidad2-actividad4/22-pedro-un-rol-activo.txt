@@ -1,0 +1,9 @@
+SELECT u.name,r.code AS rol,cr.is_active FROM company_user_roles cr JOIN company_users cu ON cu.id=cr.company_user_id JOIN users u ON u.id=cu.user_id JOIN roles r ON r.id=cr.role_id WHERE cr.company_user_id=5 ORDER BY cr.id
+
++-------+------------+-----------+
+| name  | rol        | is_active |
++-------+------------+-----------+
+| Pedro | CONSULTA   | 0         |
+| Pedro | CAPTURISTA | 1         |
++-------+------------+-----------+
+2 filas

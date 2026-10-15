@@ -1,0 +1,12 @@
+{
+  "motor": "MySQL 8.4.7",
+  "consulta": "SELECT COUNT(*) AS cuentas_rechazadas_guardadas FROM accounts WHERE name IN ('María antes 7977002','José antes 7977002')",
+  "columnas": [
+    "cuentas_rechazadas_guardadas"
+  ],
+  "filas": [
+    [
+      0
+    ]
+  ]
+}

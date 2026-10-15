@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><style>body{font:16px system-ui;margin:28px;background:#f4f7fb;color:#172438}h1{font-size:23px}pre{font:15px/1.45 monospace;background:white;border:1px solid #c6d2e1;padding:18px;white-space:pre-wrap}small{color:#506174}</style><small>Sistema General de Ingresos · Unidad II · Actividad 4</small><h1>Consulta ejecutada en MySQL 8.4.7</h1><pre>SELECT u.name,cu.id AS membresia,cu.company_id,cu.is_admin,r.code AS rol FROM company_users cu JOIN users u ON u.id=cu.user_id JOIN company_user_roles cr ON cr.company_user_id=cu.id AND cr.is_active=1 JOIN roles r ON r.id=cr.role_id WHERE cu.company_id=1 ORDER BY cu.id</pre><pre>+-------+-----------+------------+----------+---------------+
+| name  | membresia | company_id | is_admin | rol           |
++-------+-----------+------------+----------+---------------+
+| Ana   | 1         | 1          | 1        | ADMINISTRADOR |
+| Luis  | 2         | 1          | 0        | CONTADOR      |
+| María | 3         | 1          | 0        | CAPTURISTA    |
+| José  | 4         | 1          | 0        | CAPTURISTA    |
+| Pedro | 5         | 1          | 0        | CONSULTA      |
++-------+-----------+------------+----------+---------------+
+5 filas</pre>

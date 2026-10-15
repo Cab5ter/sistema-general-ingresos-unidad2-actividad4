@@ -1,0 +1,40 @@
+........................................F                                [100%]
+=================================== FAILURES ===================================
+____________________ test_complete_contract_from_three_pdfs ____________________
+
+    def test_complete_contract_from_three_pdfs():
+>       expected=build_schema('\n'.join(Path('tests',p).read_text(encoding='utf-8-sig') for p in ('schema_pdf.graphql','finance_pdf.graphql','access_pdf.graphql')))
+
+../../../../../Backend/sistema-general-ingresos-roles-permisos/tests/test_schema_pdf.py:7: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../Backend/sistema-general-ingresos-roles-permisos/tests/test_schema_pdf.py:7: in <genexpr>
+    expected=build_schema('\n'.join(Path('tests',p).read_text(encoding='utf-8-sig') for p in ('schema_pdf.graphql','finance_pdf.graphql','access_pdf.graphql')))
+/home/cabster/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('tests/schema_pdf.graphql'), mode = 'r', buffering = -1
+encoding = 'utf-8-sig', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+E       FileNotFoundError: [Errno 2] No such file or directory: 'tests/schema_pdf.graphql'
+
+/home/cabster/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=============================== warnings summary ===============================
+../envcompat/lib/python3.12/site-packages/starlette/testclient.py:37
+  /home/cabster/Documents/Codex/2026-10-12/h/work/envcompat/lib/python3.12/site-packages/starlette/testclient.py:37: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/cabster/Documents/Codex/2026-10-12/h/work/pytest-mysql.xml -
+=========================== short test summary info ============================
+FAILED ../../../../../Backend/sistema-general-ingresos-roles-permisos/tests/test_schema_pdf.py::test_complete_contract_from_three_pdfs
+1 failed, 40 passed, 1 warning in 457.38s (0:07:37)

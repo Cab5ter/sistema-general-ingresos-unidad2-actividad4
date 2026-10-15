@@ -1,0 +1,89 @@
+{
+  "estado": "COMPLETADO_Y_REINICIO_VERIFICADO",
+  "initial": {
+    "ADMINISTRADOR": [
+      "accounts.read",
+      "accounts.write",
+      "company.users.read",
+      "company.users.write",
+      "concepts.read",
+      "concepts.write",
+      "roles.read",
+      "roles.write",
+      "transactions.read",
+      "transactions.write"
+    ],
+    "CONTADOR": [
+      "accounts.read",
+      "accounts.write",
+      "company.users.read",
+      "concepts.read",
+      "concepts.write",
+      "roles.read",
+      "transactions.read",
+      "transactions.write"
+    ],
+    "CAPTURISTA": [
+      "accounts.read",
+      "concepts.read",
+      "transactions.read",
+      "transactions.write"
+    ],
+    "CONSULTA": [
+      "accounts.read",
+      "company.users.read",
+      "concepts.read",
+      "transactions.read"
+    ]
+  },
+  "stamp": "7977002",
+  "ids": {
+    "companyId": "1",
+    "actors": {
+      "Ana": "1",
+      "Luis": "2",
+      "María": "3",
+      "José": "4",
+      "Pedro": "5"
+    },
+    "roles": {
+      "ADMINISTRADOR": "1",
+      "CONTADOR": "2",
+      "CAPTURISTA": "3",
+      "CONSULTA": "4"
+    },
+    "permissions": {
+      "company.users.read": "1",
+      "company.users.write": "2",
+      "accounts.read": "3",
+      "accounts.write": "4",
+      "concepts.read": "5",
+      "concepts.write": "6",
+      "transactions.read": "7",
+      "transactions.write": "8",
+      "roles.read": "9",
+      "roles.write": "10"
+    },
+    "accountId": "1",
+    "conceptId": "1"
+  },
+  "catalogSql": "SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM permissions) AS permisos, (SELECT COUNT(*) FROM role_permissions WHERE is_active=1) AS relaciones_activas, (SELECT COUNT(*) FROM role_permissions WHERE is_active=0) AS relaciones_inactivas",
+  "reinicio": {
+    "motor": "MySQL 8.4.7",
+    "consulta": "SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM permissions) AS permisos, (SELECT COUNT(*) FROM role_permissions WHERE is_active=1) AS relaciones_activas, (SELECT COUNT(*) FROM role_permissions WHERE is_active=0) AS relaciones_inactivas",
+    "columnas": [
+      "roles",
+      "permisos",
+      "relaciones_activas",
+      "relaciones_inactivas"
+    ],
+    "filas": [
+      [
+        4,
+        10,
+        26,
+        2
+      ]
+    ]
+  }
+}

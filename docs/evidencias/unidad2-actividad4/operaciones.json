@@ -1,0 +1,1272 @@
+[
+  {
+    "name": "01-roles",
+    "title": "Configuración inicial: cuatro roles",
+    "rule": "El catálogo contiene ADMINISTRADOR, CONTADOR, CAPTURISTA y CONSULTA.",
+    "query": "# Configuración inicial: cuatro roles\nquery { roles(actorCompanyUserId: \"1\") { id code } }",
+    "result": {
+      "data": {
+        "roles": [
+          {
+            "id": "1",
+            "code": "ADMINISTRADOR"
+          },
+          {
+            "id": "2",
+            "code": "CONTADOR"
+          },
+          {
+            "id": "3",
+            "code": "CAPTURISTA"
+          },
+          {
+            "id": "4",
+            "code": "CONSULTA"
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "01-roles.png"
+  },
+  {
+    "name": "02-permisos",
+    "title": "Configuración inicial: diez permisos",
+    "rule": "Los permisos son acciones del catálogo; no pertenecen directamente a cada usuario.",
+    "query": "# Configuración inicial: diez permisos\nquery { permissions(actorCompanyUserId: \"1\") { code } }",
+    "result": {
+      "data": {
+        "permissions": [
+          {
+            "code": "company.users.read"
+          },
+          {
+            "code": "company.users.write"
+          },
+          {
+            "code": "accounts.read"
+          },
+          {
+            "code": "accounts.write"
+          },
+          {
+            "code": "concepts.read"
+          },
+          {
+            "code": "concepts.write"
+          },
+          {
+            "code": "transactions.read"
+          },
+          {
+            "code": "transactions.write"
+          },
+          {
+            "code": "roles.read"
+          },
+          {
+            "code": "roles.write"
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "02-permisos.png"
+  },
+  {
+    "name": "03-administrador-inicial",
+    "title": "ADMINISTRADOR - lista inicial",
+    "rule": "El administrador dispone de los diez permisos.",
+    "query": "# ADMINISTRADOR - lista inicial\nquery {\n  rolePermissions(actorCompanyUserId: \"1\", roleId: \"1\") {\n    permission { code }\n  }\n}",
+    "result": {
+      "data": {
+        "rolePermissions": [
+          {
+            "permission": {
+              "code": "company.users.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "company.users.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "roles.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "roles.write"
+            }
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "03-administrador-inicial.png"
+  },
+  {
+    "name": "04-contador-inicial",
+    "title": "CONTADOR - lista inicial",
+    "rule": "El contador tiene accounts.write, pero no roles.write.",
+    "query": "# CONTADOR - lista inicial\nquery {\n  rolePermissions(actorCompanyUserId: \"1\", roleId: \"2\") {\n    permission { code }\n  }\n}",
+    "result": {
+      "data": {
+        "rolePermissions": [
+          {
+            "permission": {
+              "code": "company.users.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "roles.read"
+            }
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "04-contador-inicial.png"
+  },
+  {
+    "name": "05-capturista-inicial",
+    "title": "CAPTURISTA - lista inicial",
+    "rule": "El capturista tiene transactions.write y todavía no tiene accounts.write.",
+    "query": "# CAPTURISTA - lista inicial\nquery {\n  rolePermissions(actorCompanyUserId: \"1\", roleId: \"3\") {\n    permission { code }\n  }\n}",
+    "result": {
+      "data": {
+        "rolePermissions": [
+          {
+            "permission": {
+              "code": "accounts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.write"
+            }
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "05-capturista-inicial.png"
+  },
+  {
+    "name": "06-consulta-inicial",
+    "title": "CONSULTA - lista inicial",
+    "rule": "Consulta no tiene ningún permiso de escritura.",
+    "query": "# CONSULTA - lista inicial\nquery {\n  rolePermissions(actorCompanyUserId: \"1\", roleId: \"4\") {\n    permission { code }\n  }\n}",
+    "result": {
+      "data": {
+        "rolePermissions": [
+          {
+            "permission": {
+              "code": "company.users.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.read"
+            }
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "06-consulta-inicial.png"
+  },
+  {
+    "name": "07-cinco-personas",
+    "title": "Cinco personas, una empresa",
+    "rule": "Ana es administradora; Luis contador; María y José capturistas; Pedro consulta.",
+    "query": "SELECT u.name,cu.id AS membresia,cu.company_id,cu.is_admin,r.code AS rol FROM company_users cu JOIN users u ON u.id=cu.user_id JOIN company_user_roles cr ON cr.company_user_id=cu.id AND cr.is_active=1 JOIN roles r ON r.id=cr.role_id WHERE cu.company_id=1 ORDER BY cu.id",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT u.name,cu.id AS membresia,cu.company_id,cu.is_admin,r.code AS rol FROM company_users cu JOIN users u ON u.id=cu.user_id JOIN company_user_roles cr ON cr.company_user_id=cu.id AND cr.is_active=1 JOIN roles r ON r.id=cr.role_id WHERE cu.company_id=1 ORDER BY cu.id",
+      "columnas": [
+        "name",
+        "membresia",
+        "company_id",
+        "is_admin",
+        "rol"
+      ],
+      "filas": [
+        [
+          "Ana",
+          1,
+          1,
+          1,
+          "ADMINISTRADOR"
+        ],
+        [
+          "Luis",
+          2,
+          1,
+          0,
+          "CONTADOR"
+        ],
+        [
+          "María",
+          3,
+          1,
+          0,
+          "CAPTURISTA"
+        ],
+        [
+          "José",
+          4,
+          1,
+          0,
+          "CAPTURISTA"
+        ],
+        [
+          "Pedro",
+          5,
+          1,
+          0,
+          "CONSULTA"
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "07-cinco-personas.png"
+  },
+  {
+    "name": "08-maria-rechazada",
+    "title": "María / CAPTURISTA: crear cuenta antes del cambio",
+    "rule": "Sin accounts.write, el servidor rechaza createAccount antes de guardar.",
+    "query": "# María / CAPTURISTA: crear cuenta antes del cambio\nmutation {\n  createAccount(\n    actorCompanyUserId: \"3\"\n    input: {companyId: \"1\", accountType: CASH,\n      name: \"María antes 7977002\"}\n  ) { id name companyId }\n}",
+    "result": {
+      "data": null,
+      "errors": [
+        {
+          "message": "El rol no tiene el permiso accounts.write.",
+          "locations": [
+            {
+              "line": 3,
+              "column": 3
+            }
+          ],
+          "path": [
+            "createAccount"
+          ],
+          "extensions": {
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "expected": "FORBIDDEN",
+    "http": 200,
+    "captura": "08-maria-rechazada.png"
+  },
+  {
+    "name": "09-jose-rechazado",
+    "title": "José / CAPTURISTA: crear cuenta antes del cambio",
+    "rule": "José también recibe rechazo porque usa la misma lista del rol Capturista.",
+    "query": "# José / CAPTURISTA: crear cuenta antes del cambio\nmutation {\n  createAccount(\n    actorCompanyUserId: \"4\"\n    input: {companyId: \"1\", accountType: CASH,\n      name: \"José antes 7977002\"}\n  ) { id name companyId }\n}",
+    "result": {
+      "data": null,
+      "errors": [
+        {
+          "message": "El rol no tiene el permiso accounts.write.",
+          "locations": [
+            {
+              "line": 3,
+              "column": 3
+            }
+          ],
+          "path": [
+            "createAccount"
+          ],
+          "extensions": {
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "expected": "FORBIDDEN",
+    "http": 200,
+    "captura": "09-jose-rechazado.png"
+  },
+  {
+    "name": "10-cuentas-no-guardadas",
+    "title": "Comprobación de las cuentas rechazadas",
+    "rule": "Un rechazo no hace commit: las dos cuentas solicitadas no existen.",
+    "query": "SELECT COUNT(*) AS cuentas_rechazadas_guardadas FROM accounts WHERE name IN ('María antes 7977002','José antes 7977002')",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT COUNT(*) AS cuentas_rechazadas_guardadas FROM accounts WHERE name IN ('María antes 7977002','José antes 7977002')",
+      "columnas": [
+        "cuentas_rechazadas_guardadas"
+      ],
+      "filas": [
+        [
+          0
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "10-cuentas-no-guardadas.png"
+  },
+  {
+    "name": "11-ana-agrega-permiso",
+    "title": "Ana / ADMINISTRADOR: agrega accounts.write al capturista",
+    "rule": "Una modificación en role_permissions habilita la acción para todos los capturistas.",
+    "query": "# Ana / ADMINISTRADOR: agrega accounts.write al capturista\nmutation {\n  assignPermissionToRole(\n    actorCompanyUserId: \"1\"\n    input: {roleId: \"3\", permissionId: \"4\"}\n  ) { id role { code } permission { code } isActive }\n}",
+    "result": {
+      "data": {
+        "assignPermissionToRole": {
+          "id": "27",
+          "role": {
+            "code": "CAPTURISTA"
+          },
+          "permission": {
+            "code": "accounts.write"
+          },
+          "isActive": true
+        }
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "11-ana-agrega-permiso.png"
+  },
+  {
+    "name": "12-pareja-duplicada",
+    "title": "Ana: no se duplica una pareja activa",
+    "rule": "assignPermissionToRole rechaza una relación que ya está activa.",
+    "query": "# Ana: no se duplica una pareja activa\nmutation {\n  assignPermissionToRole(\n    actorCompanyUserId: \"1\"\n    input: {roleId: \"3\", permissionId: \"4\"}\n  ) { id role { code } permission { code } isActive }\n}",
+    "result": {
+      "data": null,
+      "errors": [
+        {
+          "message": "La pareja rol-permiso ya está activa.",
+          "locations": [
+            {
+              "line": 3,
+              "column": 3
+            }
+          ],
+          "path": [
+            "assignPermissionToRole"
+          ],
+          "extensions": {
+            "code": "CONFLICT"
+          }
+        }
+      ]
+    },
+    "expected": "CONFLICT",
+    "http": 200,
+    "captura": "12-pareja-duplicada.png"
+  },
+  {
+    "name": "13-maria-aceptada",
+    "title": "María / CAPTURISTA: cuenta después del cambio",
+    "rule": "María crea una cuenta porque su rol ahora incluye accounts.write.",
+    "query": "# María / CAPTURISTA: cuenta después del cambio\nmutation {\n  createAccount(\n    actorCompanyUserId: \"3\"\n    input: {companyId: \"1\", accountType: CASH,\n      name: \"María después 7977002\"}\n  ) { id name companyId }\n}",
+    "result": {
+      "data": {
+        "createAccount": {
+          "id": "2",
+          "name": "María después 7977002",
+          "companyId": "1"
+        }
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "13-maria-aceptada.png"
+  },
+  {
+    "name": "14-jose-aceptado",
+    "title": "José / CAPTURISTA: cuenta después del cambio",
+    "rule": "José también crea una cuenta sin cambiar su ficha ni su asignación de rol.",
+    "query": "# José / CAPTURISTA: cuenta después del cambio\nmutation {\n  createAccount(\n    actorCompanyUserId: \"4\"\n    input: {companyId: \"1\", accountType: CASH,\n      name: \"José después 7977002\"}\n  ) { id name companyId }\n}",
+    "result": {
+      "data": {
+        "createAccount": {
+          "id": "3",
+          "name": "José después 7977002",
+          "companyId": "1"
+        }
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "14-jose-aceptado.png"
+  },
+  {
+    "name": "15-ana-quita-permiso",
+    "title": "Ana: retira accounts.write del capturista",
+    "rule": "removePermissionFromRole desactiva la pareja y conserva su historial.",
+    "query": "# Ana: retira accounts.write del capturista\nmutation {\n  removePermissionFromRole(\n    actorCompanyUserId: \"1\"\n    roleId: \"3\"\n    permissionId: \"4\"\n  )\n}",
+    "result": {
+      "data": {
+        "removePermissionFromRole": true
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "15-ana-quita-permiso.png"
+  },
+  {
+    "name": "16-pareja-inactiva",
+    "title": "MySQL: la pareja permanece inactiva",
+    "rule": "La misma fila de CAPTURISTA + accounts.write existe con is_active=0; no fue borrada.",
+    "query": "SELECT rp.id,r.code AS rol,p.code AS permiso,rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id WHERE r.code='CAPTURISTA' AND p.code='accounts.write'",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT rp.id,r.code AS rol,p.code AS permiso,rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id WHERE r.code='CAPTURISTA' AND p.code='accounts.write'",
+      "columnas": [
+        "id",
+        "rol",
+        "permiso",
+        "is_active"
+      ],
+      "filas": [
+        [
+          27,
+          "CAPTURISTA",
+          "accounts.write",
+          0
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "16-pareja-inactiva.png"
+  },
+  {
+    "name": "17-maria-rechazada-otra-vez",
+    "title": "María: rechazo después de retirar el permiso",
+    "rule": "La revocación del permiso del rol alcanza a María.",
+    "query": "# María: rechazo después de retirar el permiso\nmutation {\n  createAccount(\n    actorCompanyUserId: \"3\"\n    input: {companyId: \"1\", accountType: CASH,\n      name: \"María retirado 7977002\"}\n  ) { id name companyId }\n}",
+    "result": {
+      "data": null,
+      "errors": [
+        {
+          "message": "El rol no tiene el permiso accounts.write.",
+          "locations": [
+            {
+              "line": 3,
+              "column": 3
+            }
+          ],
+          "path": [
+            "createAccount"
+          ],
+          "extensions": {
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "expected": "FORBIDDEN",
+    "http": 200,
+    "captura": "17-maria-rechazada-otra-vez.png"
+  },
+  {
+    "name": "18-jose-rechazado-otra-vez",
+    "title": "José: rechazo después de retirar el permiso",
+    "rule": "La misma revocación alcanza a José sin editar a las personas.",
+    "query": "# José: rechazo después de retirar el permiso\nmutation {\n  createAccount(\n    actorCompanyUserId: \"4\"\n    input: {companyId: \"1\", accountType: CASH,\n      name: \"José retirado 7977002\"}\n  ) { id name companyId }\n}",
+    "result": {
+      "data": null,
+      "errors": [
+        {
+          "message": "El rol no tiene el permiso accounts.write.",
+          "locations": [
+            {
+              "line": 3,
+              "column": 3
+            }
+          ],
+          "path": [
+            "createAccount"
+          ],
+          "extensions": {
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "expected": "FORBIDDEN",
+    "http": 200,
+    "captura": "18-jose-rechazado-otra-vez.png"
+  },
+  {
+    "name": "19-pedro-rechazado",
+    "title": "Pedro / CONSULTA: movimiento rechazado",
+    "rule": "Consulta permite ver movimientos, pero no registrarlos.",
+    "query": "# Pedro / CONSULTA: movimiento rechazado\nmutation {\n  createTransaction(\n    actorCompanyUserId: \"5\"\n    input: {accountId: \"1\", conceptId: \"1\",\n      transactionType: INCOME, amount: \"125.50\",\n      shortDescription: \"Pedro consulta 7977002\"}\n  ) { id amount shortDescription capturedBy }\n}",
+    "result": {
+      "data": null,
+      "errors": [
+        {
+          "message": "El rol no tiene el permiso transactions.write.",
+          "locations": [
+            {
+              "line": 3,
+              "column": 3
+            }
+          ],
+          "path": [
+            "createTransaction"
+          ],
+          "extensions": {
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "expected": "FORBIDDEN",
+    "http": 200,
+    "captura": "19-pedro-rechazado.png"
+  },
+  {
+    "name": "20-movimiento-no-guardado",
+    "title": "MySQL: movimiento rechazado ausente",
+    "rule": "El rechazo de Pedro no agrega ninguna fila a transactions.",
+    "query": "SELECT COUNT(*) AS movimientos_rechazados_guardados FROM transactions WHERE short_description='Pedro consulta 7977002'",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT COUNT(*) AS movimientos_rechazados_guardados FROM transactions WHERE short_description='Pedro consulta 7977002'",
+      "columnas": [
+        "movimientos_rechazados_guardados"
+      ],
+      "filas": [
+        [
+          0
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "20-movimiento-no-guardado.png"
+  },
+  {
+    "name": "21-pedro-cambia-rol",
+    "title": "Ana: cambia a Pedro de CONSULTA a CAPTURISTA",
+    "rule": "assignRole cambia el puesto de una sola persona.",
+    "query": "# Ana: cambia a Pedro de CONSULTA a CAPTURISTA\nmutation {\n assignRole(actorCompanyUserId: \"1\",\n   input: {companyUserId: \"5\", roleId: \"3\"}) {\n   companyUser { user { name } } role { code } isActive\n }\n}",
+    "result": {
+      "data": {
+        "assignRole": {
+          "companyUser": {
+            "user": {
+              "name": "Pedro"
+            }
+          },
+          "role": {
+            "code": "CAPTURISTA"
+          },
+          "isActive": true
+        }
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "21-pedro-cambia-rol.png"
+  },
+  {
+    "name": "22-pedro-un-rol-activo",
+    "title": "MySQL: historial y un solo rol activo de Pedro",
+    "rule": "CONSULTA queda inactivo y CAPTURISTA queda activo; Pedro conserva exactamente un rol activo.",
+    "query": "SELECT u.name,r.code AS rol,cr.is_active FROM company_user_roles cr JOIN company_users cu ON cu.id=cr.company_user_id JOIN users u ON u.id=cu.user_id JOIN roles r ON r.id=cr.role_id WHERE cr.company_user_id=5 ORDER BY cr.id",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT u.name,r.code AS rol,cr.is_active FROM company_user_roles cr JOIN company_users cu ON cu.id=cr.company_user_id JOIN users u ON u.id=cu.user_id JOIN roles r ON r.id=cr.role_id WHERE cr.company_user_id=5 ORDER BY cr.id",
+      "columnas": [
+        "name",
+        "rol",
+        "is_active"
+      ],
+      "filas": [
+        [
+          "Pedro",
+          "CONSULTA",
+          0
+        ],
+        [
+          "Pedro",
+          "CAPTURISTA",
+          1
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "22-pedro-un-rol-activo.png"
+  },
+  {
+    "name": "23-pedro-aceptado",
+    "title": "Pedro / CAPTURISTA: movimiento aceptado",
+    "rule": "Con transactions.write en su nuevo rol, Pedro guarda el ingreso de 125.50.",
+    "query": "# Pedro / CAPTURISTA: movimiento aceptado\nmutation {\n  createTransaction(\n    actorCompanyUserId: \"5\"\n    input: {accountId: \"1\", conceptId: \"1\",\n      transactionType: INCOME, amount: \"125.50\",\n      shortDescription: \"Pedro capturista 7977002\"}\n  ) { id amount shortDescription capturedBy }\n}",
+    "result": {
+      "data": {
+        "createTransaction": {
+          "id": "1",
+          "amount": "125.50",
+          "shortDescription": "Pedro capturista 7977002",
+          "capturedBy": "5"
+        }
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "23-pedro-aceptado.png"
+  },
+  {
+    "name": "24-contador-sin-cambios",
+    "title": "CONTADOR: lista después del cambio de Pedro",
+    "rule": "La lista del contador es idéntica a la inicial; cambiar a Pedro no modifica a Luis.",
+    "query": "# CONTADOR: lista después del cambio de Pedro\nquery {\n  rolePermissions(actorCompanyUserId: \"1\", roleId: \"2\") {\n    permission { code }\n  }\n}",
+    "result": {
+      "data": {
+        "rolePermissions": [
+          {
+            "permission": {
+              "code": "company.users.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.write"
+            }
+          },
+          {
+            "permission": {
+              "code": "roles.read"
+            }
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "24-contador-sin-cambios.png"
+  },
+  {
+    "name": "25-luis-crea-cuenta",
+    "title": "Luis / CONTADOR: todavía puede crear cuentas",
+    "rule": "Luis conserva accounts.write después de cambiar el rol de Pedro.",
+    "query": "# Luis / CONTADOR: todavía puede crear cuentas\nmutation {\n  createAccount(\n    actorCompanyUserId: \"2\"\n    input: {companyId: \"1\", accountType: CASH,\n      name: \"Luis contador 7977002\"}\n  ) { id name companyId }\n}",
+    "result": {
+      "data": {
+        "createAccount": {
+          "id": "4",
+          "name": "Luis contador 7977002",
+          "companyId": "1"
+        }
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "25-luis-crea-cuenta.png"
+  },
+  {
+    "name": "26-consulta-sin-cambios",
+    "title": "CONSULTA: lista después del cambio de Pedro",
+    "rule": "La lista de Consulta conserva los mismos permisos y ninguno termina en .write.",
+    "query": "# CONSULTA: lista después del cambio de Pedro\nquery {\n  rolePermissions(actorCompanyUserId: \"1\", roleId: \"4\") {\n    permission { code }\n  }\n}",
+    "result": {
+      "data": {
+        "rolePermissions": [
+          {
+            "permission": {
+              "code": "company.users.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "accounts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "concepts.read"
+            }
+          },
+          {
+            "permission": {
+              "code": "transactions.read"
+            }
+          }
+        ]
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "26-consulta-sin-cambios.png"
+  },
+  {
+    "name": "27-jose-no-administra",
+    "title": "José / CAPTURISTA: intenta modificar CONSULTA",
+    "rule": "José no tiene roles.write; el servidor rechaza su intento de agregar concepts.write.",
+    "query": "# José / CAPTURISTA: intenta modificar CONSULTA\nmutation {\n  assignPermissionToRole(\n    actorCompanyUserId: \"4\"\n    input: {roleId: \"4\", permissionId: \"6\"}\n  ) { id role { code } permission { code } isActive }\n}",
+    "result": {
+      "data": null,
+      "errors": [
+        {
+          "message": "El rol no tiene el permiso roles.write.",
+          "locations": [
+            {
+              "line": 3,
+              "column": 3
+            }
+          ],
+          "path": [
+            "assignPermissionToRole"
+          ],
+          "extensions": {
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "expected": "FORBIDDEN",
+    "http": 200,
+    "captura": "27-jose-no-administra.png"
+  },
+  {
+    "name": "28-lista-no-modificada",
+    "title": "MySQL: José no modificó la lista",
+    "rule": "El intento de José no creó ni activó la pareja CONSULTA + concepts.write.",
+    "query": "SELECT rp.id,r.code AS rol,p.code AS permiso,rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id WHERE r.code='CONSULTA' AND p.code='concepts.write'",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT rp.id,r.code AS rol,p.code AS permiso,rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id WHERE r.code='CONSULTA' AND p.code='concepts.write'",
+      "columnas": [
+        "id",
+        "rol",
+        "permiso",
+        "is_active"
+      ],
+      "filas": []
+    },
+    "expected": "SELECT REAL",
+    "captura": "28-lista-no-modificada.png"
+  },
+  {
+    "name": "29-ana-si-administra",
+    "title": "Ana / ADMINISTRADOR: agrega concepts.write a CONSULTA",
+    "rule": "Ana tiene roles.write y la misma operación sí se guarda.",
+    "query": "# Ana / ADMINISTRADOR: agrega concepts.write a CONSULTA\nmutation {\n  assignPermissionToRole(\n    actorCompanyUserId: \"1\"\n    input: {roleId: \"4\", permissionId: \"6\"}\n  ) { id role { code } permission { code } isActive }\n}",
+    "result": {
+      "data": {
+        "assignPermissionToRole": {
+          "id": "28",
+          "role": {
+            "code": "CONSULTA"
+          },
+          "permission": {
+            "code": "concepts.write"
+          },
+          "isActive": true
+        }
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "29-ana-si-administra.png"
+  },
+  {
+    "name": "30-ana-restaura-consulta",
+    "title": "Ana: retira concepts.write de CONSULTA",
+    "rule": "Consulta vuelve a quedar sin permisos de escritura y se conserva la fila inactiva.",
+    "query": "# Ana: retira concepts.write de CONSULTA\nmutation {\n  removePermissionFromRole(\n    actorCompanyUserId: \"1\"\n    roleId: \"4\"\n    permissionId: \"6\"\n  )\n}",
+    "result": {
+      "data": {
+        "removePermissionFromRole": true
+      }
+    },
+    "expected": "ACEPTADO",
+    "http": 200,
+    "captura": "30-ana-restaura-consulta.png"
+  },
+  {
+    "name": "31-select-final",
+    "title": "SELECT final de role_permissions",
+    "rule": "Las 26 relaciones activas coinciden con la matriz inicial; las dos pruebas retiradas permanecen inactivas.",
+    "query": "SELECT r.code AS rol, p.code AS permiso, rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id ORDER BY r.code,p.code",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT r.code AS rol, p.code AS permiso, rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id ORDER BY r.code,p.code",
+      "columnas": [
+        "rol",
+        "permiso",
+        "is_active"
+      ],
+      "filas": [
+        [
+          "ADMINISTRADOR",
+          "accounts.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "accounts.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "company.users.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "company.users.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "concepts.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "concepts.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "roles.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "roles.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "transactions.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "transactions.write",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "accounts.read",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "accounts.write",
+          0
+        ],
+        [
+          "CAPTURISTA",
+          "concepts.read",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "transactions.read",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "transactions.write",
+          1
+        ],
+        [
+          "CONSULTA",
+          "accounts.read",
+          1
+        ],
+        [
+          "CONSULTA",
+          "company.users.read",
+          1
+        ],
+        [
+          "CONSULTA",
+          "concepts.read",
+          1
+        ],
+        [
+          "CONSULTA",
+          "concepts.write",
+          0
+        ],
+        [
+          "CONSULTA",
+          "transactions.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "accounts.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "accounts.write",
+          1
+        ],
+        [
+          "CONTADOR",
+          "company.users.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "concepts.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "concepts.write",
+          1
+        ],
+        [
+          "CONTADOR",
+          "roles.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "transactions.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "transactions.write",
+          1
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "31-select-final.png"
+  },
+  {
+    "name": "32-conteos-antes-reinicio",
+    "title": "Catálogos antes de reiniciar",
+    "rule": "Se conservan cuatro roles, diez permisos y 26 relaciones activas.",
+    "query": "SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM permissions) AS permisos, (SELECT COUNT(*) FROM role_permissions WHERE is_active=1) AS relaciones_activas, (SELECT COUNT(*) FROM role_permissions WHERE is_active=0) AS relaciones_inactivas",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM permissions) AS permisos, (SELECT COUNT(*) FROM role_permissions WHERE is_active=1) AS relaciones_activas, (SELECT COUNT(*) FROM role_permissions WHERE is_active=0) AS relaciones_inactivas",
+      "columnas": [
+        "roles",
+        "permisos",
+        "relaciones_activas",
+        "relaciones_inactivas"
+      ],
+      "filas": [
+        [
+          4,
+          10,
+          26,
+          2
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "32-conteos-antes-reinicio.png"
+  },
+  {
+    "name": "33-catalogos-tras-reinicio",
+    "title": "MySQL después de reiniciar el servidor",
+    "rule": "El reinicio conserva 4 roles y 10 permisos; no duplica catálogos ni reactiva permisos retirados.",
+    "query": "SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM permissions) AS permisos, (SELECT COUNT(*) FROM role_permissions WHERE is_active=1) AS relaciones_activas, (SELECT COUNT(*) FROM role_permissions WHERE is_active=0) AS relaciones_inactivas",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT (SELECT COUNT(*) FROM roles) AS roles, (SELECT COUNT(*) FROM permissions) AS permisos, (SELECT COUNT(*) FROM role_permissions WHERE is_active=1) AS relaciones_activas, (SELECT COUNT(*) FROM role_permissions WHERE is_active=0) AS relaciones_inactivas",
+      "columnas": [
+        "roles",
+        "permisos",
+        "relaciones_activas",
+        "relaciones_inactivas"
+      ],
+      "filas": [
+        [
+          4,
+          10,
+          26,
+          2
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "33-catalogos-tras-reinicio.png"
+  },
+  {
+    "name": "34-matriz-tras-reinicio",
+    "title": "Matriz final después del reinicio",
+    "rule": "Después de reiniciar, la matriz activa sigue coincidiendo con la del documento y las dos parejas retiradas siguen inactivas.",
+    "query": "SELECT r.code AS rol, p.code AS permiso, rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id ORDER BY r.code,p.code",
+    "result": {
+      "motor": "MySQL 8.4.7",
+      "consulta": "SELECT r.code AS rol, p.code AS permiso, rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id ORDER BY r.code,p.code",
+      "columnas": [
+        "rol",
+        "permiso",
+        "is_active"
+      ],
+      "filas": [
+        [
+          "ADMINISTRADOR",
+          "accounts.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "accounts.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "company.users.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "company.users.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "concepts.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "concepts.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "roles.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "roles.write",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "transactions.read",
+          1
+        ],
+        [
+          "ADMINISTRADOR",
+          "transactions.write",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "accounts.read",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "accounts.write",
+          0
+        ],
+        [
+          "CAPTURISTA",
+          "concepts.read",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "transactions.read",
+          1
+        ],
+        [
+          "CAPTURISTA",
+          "transactions.write",
+          1
+        ],
+        [
+          "CONSULTA",
+          "accounts.read",
+          1
+        ],
+        [
+          "CONSULTA",
+          "company.users.read",
+          1
+        ],
+        [
+          "CONSULTA",
+          "concepts.read",
+          1
+        ],
+        [
+          "CONSULTA",
+          "concepts.write",
+          0
+        ],
+        [
+          "CONSULTA",
+          "transactions.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "accounts.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "accounts.write",
+          1
+        ],
+        [
+          "CONTADOR",
+          "company.users.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "concepts.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "concepts.write",
+          1
+        ],
+        [
+          "CONTADOR",
+          "roles.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "transactions.read",
+          1
+        ],
+        [
+          "CONTADOR",
+          "transactions.write",
+          1
+        ]
+      ]
+    },
+    "expected": "SELECT REAL",
+    "captura": "34-matriz-tras-reinicio.png"
+  }
+]

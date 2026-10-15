@@ -1,0 +1,8 @@
+SELECT COUNT(*) AS cuentas_rechazadas_guardadas FROM accounts WHERE name IN ('María antes 7977002','José antes 7977002')
+
++------------------------------+
+| cuentas_rechazadas_guardadas |
++------------------------------+
+| 0                            |
++------------------------------+
+1 filas

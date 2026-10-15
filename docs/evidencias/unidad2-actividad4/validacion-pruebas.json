@@ -1,0 +1,7 @@
+{
+  "comprobaciones_distintas": 41,
+  "aprobadas_finales": 41,
+  "integracion_mysql_aprobadas": 40,
+  "contrato_graphql_aprobado": 1,
+  "nota": "La primera ejecución se hizo desde una carpeta aislada para conservar las evidencias antiguas. Los 40 casos de integración pasaron. La prueba del contrato no encontró sus archivos relativos tests/*.graphql y schema.graphql. Se copiaron esos archivos a otra carpeta aislada y la prueba del contrato se reejecutó: 1 passed. Los logs originales y XML de ambos recorridos se conservan sin modificar."
+}

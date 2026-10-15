@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.754" timestamp="2026-10-12T17:40:21.286320-06:00" hostname="archlinux"><testcase classname="tests.test_schema_pdf" name="test_complete_contract_from_three_pdfs" time="0.741" /></testsuite></testsuites>

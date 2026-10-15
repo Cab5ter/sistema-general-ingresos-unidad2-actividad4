@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8"><style>body{font:16px system-ui;margin:28px;background:#f4f7fb;color:#172438}h1{font-size:23px}pre{font:15px/1.45 monospace;background:white;border:1px solid #c6d2e1;padding:18px;white-space:pre-wrap}small{color:#506174}</style><small>Sistema General de Ingresos · Unidad II · Actividad 4</small><h1>Consulta ejecutada en MySQL 8.4.7</h1><pre>SELECT r.code AS rol, p.code AS permiso, rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id ORDER BY r.code,p.code</pre><pre>+---------------+---------------------+-----------+
+| rol           | permiso             | is_active |
++---------------+---------------------+-----------+
+| ADMINISTRADOR | accounts.read       | 1         |
+| ADMINISTRADOR | accounts.write      | 1         |
+| ADMINISTRADOR | company.users.read  | 1         |
+| ADMINISTRADOR | company.users.write | 1         |
+| ADMINISTRADOR | concepts.read       | 1         |
+| ADMINISTRADOR | concepts.write      | 1         |
+| ADMINISTRADOR | roles.read          | 1         |
+| ADMINISTRADOR | roles.write         | 1         |
+| ADMINISTRADOR | transactions.read   | 1         |
+| ADMINISTRADOR | transactions.write  | 1         |
+| CAPTURISTA    | accounts.read       | 1         |
+| CAPTURISTA    | accounts.write      | 0         |
+| CAPTURISTA    | concepts.read       | 1         |
+| CAPTURISTA    | transactions.read   | 1         |
+| CAPTURISTA    | transactions.write  | 1         |
+| CONSULTA      | accounts.read       | 1         |
+| CONSULTA      | company.users.read  | 1         |
+| CONSULTA      | concepts.read       | 1         |
+| CONSULTA      | concepts.write      | 0         |
+| CONSULTA      | transactions.read   | 1         |
+| CONTADOR      | accounts.read       | 1         |
+| CONTADOR      | accounts.write      | 1         |
+| CONTADOR      | company.users.read  | 1         |
+| CONTADOR      | concepts.read       | 1         |
+| CONTADOR      | concepts.write      | 1         |
+| CONTADOR      | roles.read          | 1         |
+| CONTADOR      | transactions.read   | 1         |
+| CONTADOR      | transactions.write  | 1         |
++---------------+---------------------+-----------+
+28 filas</pre>

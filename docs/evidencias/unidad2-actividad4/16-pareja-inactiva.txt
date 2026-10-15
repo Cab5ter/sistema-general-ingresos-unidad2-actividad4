@@ -1,0 +1,8 @@
+SELECT rp.id,r.code AS rol,p.code AS permiso,rp.is_active FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id WHERE r.code='CAPTURISTA' AND p.code='accounts.write'
+
++----+------------+----------------+-----------+
+| id | rol        | permiso        | is_active |
++----+------------+----------------+-----------+
+| 27 | CAPTURISTA | accounts.write | 0         |
++----+------------+----------------+-----------+
+1 filas
