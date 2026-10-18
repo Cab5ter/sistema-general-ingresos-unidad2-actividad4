@@ -1,0 +1,229 @@
+{
+  "sql": "SELECT rp.id AS relacion_id,r.code AS rol,p.code AS permiso,\n rp.is_active AS relacion_activa,p.is_active AS permiso_activo\n FROM role_permissions rp JOIN roles r ON r.id=rp.role_id\n JOIN permissions p ON p.id=rp.permission_id ORDER BY r.code,p.code",
+  "mysql": "8.4.11",
+  "rows": [
+    {
+      "relacion_id": 3,
+      "rol": "ADMINISTRADOR",
+      "permiso": "accounts.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 4,
+      "rol": "ADMINISTRADOR",
+      "permiso": "accounts.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 1,
+      "rol": "ADMINISTRADOR",
+      "permiso": "company.users.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 2,
+      "rol": "ADMINISTRADOR",
+      "permiso": "company.users.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 5,
+      "rol": "ADMINISTRADOR",
+      "permiso": "concepts.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 6,
+      "rol": "ADMINISTRADOR",
+      "permiso": "concepts.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 9,
+      "rol": "ADMINISTRADOR",
+      "permiso": "roles.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 10,
+      "rol": "ADMINISTRADOR",
+      "permiso": "roles.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 7,
+      "rol": "ADMINISTRADOR",
+      "permiso": "transactions.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 8,
+      "rol": "ADMINISTRADOR",
+      "permiso": "transactions.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 19,
+      "rol": "CAPTURISTA",
+      "permiso": "accounts.read",
+      "relacion_activa": 0,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 27,
+      "rol": "CAPTURISTA",
+      "permiso": "accounts.write",
+      "relacion_activa": 0,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 20,
+      "rol": "CAPTURISTA",
+      "permiso": "concepts.read",
+      "relacion_activa": 0,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 21,
+      "rol": "CAPTURISTA",
+      "permiso": "transactions.read",
+      "relacion_activa": 0,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 22,
+      "rol": "CAPTURISTA",
+      "permiso": "transactions.write",
+      "relacion_activa": 0,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 24,
+      "rol": "CONSULTA",
+      "permiso": "accounts.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 23,
+      "rol": "CONSULTA",
+      "permiso": "company.users.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 25,
+      "rol": "CONSULTA",
+      "permiso": "concepts.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 26,
+      "rol": "CONSULTA",
+      "permiso": "transactions.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 12,
+      "rol": "CONTADOR",
+      "permiso": "accounts.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 13,
+      "rol": "CONTADOR",
+      "permiso": "accounts.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 11,
+      "rol": "CONTADOR",
+      "permiso": "company.users.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 14,
+      "rol": "CONTADOR",
+      "permiso": "concepts.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 15,
+      "rol": "CONTADOR",
+      "permiso": "concepts.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 18,
+      "rol": "CONTADOR",
+      "permiso": "roles.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 16,
+      "rol": "CONTADOR",
+      "permiso": "transactions.read",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    },
+    {
+      "relacion_id": 17,
+      "rol": "CONTADOR",
+      "permiso": "transactions.write",
+      "relacion_activa": 1,
+      "permiso_activo": 1
+    }
+  ],
+  "matrix": {
+    "ADMINISTRADOR": [
+      "accounts.read",
+      "accounts.write",
+      "company.users.read",
+      "company.users.write",
+      "concepts.read",
+      "concepts.write",
+      "roles.read",
+      "roles.write",
+      "transactions.read",
+      "transactions.write"
+    ],
+    "CAPTURISTA": [],
+    "CONSULTA": [
+      "accounts.read",
+      "company.users.read",
+      "concepts.read",
+      "transactions.read"
+    ],
+    "CONTADOR": [
+      "accounts.read",
+      "accounts.write",
+      "company.users.read",
+      "concepts.read",
+      "concepts.write",
+      "roles.read",
+      "transactions.read",
+      "transactions.write"
+    ]
+  },
+  "roles": 4,
+  "permissions": 10,
+  "duplicates": []
+}

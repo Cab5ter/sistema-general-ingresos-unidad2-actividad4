@@ -1,0 +1,14 @@
+E08: nuevo proceso de API después de aplicar []
+
+Se detuvo el proceso anterior con SIGINT (salida 130).
+Se ejecutó de nuevo, desde la raíz del proyecto:
+SETTINGS_FILE=.env.docker python -m uvicorn app.main:app --host 127.0.0.1 --port 8017
+
+Salida real del nuevo proceso:
+INFO:     Started server process [2]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8017 (Press CTRL+C to quit)
+
+Ver E08-antes-reinicio.json y E08-despues-reinicio.json: IDs, pares y estados idénticos.
+La consulta E08-consulta-reiniciada de registro.json devuelve current: [].

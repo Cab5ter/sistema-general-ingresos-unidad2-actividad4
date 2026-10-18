@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="5.458" timestamp="2026-10-17T18:42:25.658306-06:00" hostname="archlinux"><testcase classname="tests.test_permission_sets" name="test_e07_rollback_after_flush" time="5.333" /></testsuite></testsuites>

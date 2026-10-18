@@ -187,6 +187,7 @@ type Mutation {
   removeConceptFromAccount(actorCompanyUserId: ID!, accountId: ID!, conceptId: ID!): Boolean!
   createTransaction(actorCompanyUserId: ID!, input: CreateTransactionInput!): Transaction!
   deleteTransaction(actorCompanyUserId: ID!, id: ID!): Transaction!
+  setRolePermissions(input: SetRolePermissionsInput!, actorCompanyUserId: ID!): RolePermissionUpdate
   createRole(actorCompanyUserId: ID!, input: CreateRoleInput!): Role!
   deactivateRole(actorCompanyUserId: ID!, id: ID!): Role!
   createPermission(actorCompanyUserId: ID!, input: CreatePermissionInput!): Permission!
@@ -210,6 +211,14 @@ type Permission {
   isActive: Boolean!
 }
 
+enum PermissionResource {
+  COMPANY_USERS
+  ACCOUNTS
+  CONCEPTS
+  TRANSACTIONS
+  ROLES
+}
+
 type Query {
   accounts(actorCompanyUserId: ID!, companyId: ID!, accountType: AccountType, activeOnly: Boolean): [Account!]!
   concepts(actorCompanyUserId: ID!, companyId: ID!, conceptType: ConceptType, activeOnly: Boolean): [Concept!]!
@@ -218,6 +227,8 @@ type Query {
 
   """Extensión: ingresos activos menos egresos activos, sin paginación."""
   accountBalance(actorCompanyUserId: ID!, accountId: ID!): Decimal!
+  permissionCatalog(actorCompanyUserId: ID!, resource: PermissionResource): [Permission!]!
+  previewRolePermissions(input: SetRolePermissionsInput!, actorCompanyUserId: ID!): RolePermissionPlan
   roles(actorCompanyUserId: ID!, activeOnly: Boolean): [Role!]!
   role(actorCompanyUserId: ID!, id: ID!): Role
   permissions(actorCompanyUserId: ID!, activeOnly: Boolean): [Permission!]!
@@ -240,6 +251,29 @@ type RolePermission {
   role: Role!
   permission: Permission!
   isActive: Boolean!
+}
+
+type RolePermissionPlan {
+  role: Role!
+  current: [Permission!]!
+  toActivate: [Permission!]!
+  toDeactivate: [Permission!]!
+  unchanged: [Permission!]!
+  finalCount: Int!
+}
+
+type RolePermissionUpdate {
+  role: Role!
+  activated: [Permission!]!
+  deactivated: [Permission!]!
+  unchanged: [Permission!]!
+  finalCount: Int!
+  changed: Boolean!
+}
+
+input SetRolePermissionsInput {
+  roleId: ID!
+  permissionIds: [ID!]!
 }
 
 scalar Time

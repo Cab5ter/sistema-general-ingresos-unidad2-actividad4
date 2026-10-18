@@ -1,0 +1,29 @@
+query PuntoDePartida($actor: ID!) {
+  roles(actorCompanyUserId: $actor) { id code isActive }
+  permissions(actorCompanyUserId: $actor) { id code isActive }
+}
+query ExplorarCatalogo($actor: ID!) {
+  cuentas: permissionCatalog(actorCompanyUserId: $actor, resource: ACCOUNTS) { ...DatosPermiso }
+  movimientos: permissionCatalog(actorCompanyUserId: $actor, resource: TRANSACTIONS) { ...DatosPermiso }
+}
+fragment DatosPermiso on Permission { id code name }
+query CatalogoCompleto($actor: ID!, $resource: PermissionResource) {
+  permissionCatalog(actorCompanyUserId: $actor, resource: $resource) { id code name }
+}
+query RevisarConfiguracion($actor: ID!, $input: SetRolePermissionsInput!) {
+  previewRolePermissions(actorCompanyUserId: $actor, input: $input) {
+    role { code } current { code } toActivate { code } toDeactivate { code }
+    unchanged { code } finalCount
+  }
+}
+mutation AplicarConfiguracion($actor: ID!, $input: SetRolePermissionsInput!) {
+  setRolePermissions(actorCompanyUserId: $actor, input: $input) {
+    role { code } activated { code } deactivated { code } unchanged { code } finalCount changed
+  }
+}
+query ConsultarCuentas($actor: ID!, $company: ID!) {
+  accounts(actorCompanyUserId: $actor, companyId: $company) { id companyId name }
+}
+mutation RegistrarMovimiento($actor: ID!, $input: CreateTransactionInput!) {
+  createTransaction(actorCompanyUserId: $actor, input: $input) { id accountId conceptId amount capturedBy }
+}

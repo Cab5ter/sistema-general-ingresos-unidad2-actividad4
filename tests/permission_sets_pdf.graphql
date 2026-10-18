@@ -1,0 +1,25 @@
+enum PermissionResource { COMPANY_USERS ACCOUNTS CONCEPTS TRANSACTIONS ROLES }
+input SetRolePermissionsInput { roleId: ID! permissionIds: [ID!]! }
+type RolePermissionPlan {
+  role: Role!
+  current: [Permission!]!
+  toActivate: [Permission!]!
+  toDeactivate: [Permission!]!
+  unchanged: [Permission!]!
+  finalCount: Int!
+}
+type RolePermissionUpdate {
+  role: Role!
+  activated: [Permission!]!
+  deactivated: [Permission!]!
+  unchanged: [Permission!]!
+  finalCount: Int!
+  changed: Boolean!
+}
+extend type Query {
+  permissionCatalog(actorCompanyUserId: ID!, resource: PermissionResource): [Permission!]!
+  previewRolePermissions(input: SetRolePermissionsInput!, actorCompanyUserId: ID!): RolePermissionPlan
+}
+extend type Mutation {
+  setRolePermissions(input: SetRolePermissionsInput!, actorCompanyUserId: ID!): RolePermissionUpdate
+}

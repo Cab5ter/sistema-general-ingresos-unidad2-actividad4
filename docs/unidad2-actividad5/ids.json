@@ -1,0 +1,30 @@
+{
+  "companyId": "1",
+  "actors": {
+    "Ana": "1",
+    "Luis": "2",
+    "María": "3",
+    "José": "4",
+    "Pedro": "5"
+  },
+  "roles": {
+    "ADMINISTRADOR": "1",
+    "CONTADOR": "2",
+    "CAPTURISTA": "3",
+    "CONSULTA": "4"
+  },
+  "permissions": {
+    "company.users.read": "1",
+    "company.users.write": "2",
+    "accounts.read": "3",
+    "accounts.write": "4",
+    "concepts.read": "5",
+    "concepts.write": "6",
+    "transactions.read": "7",
+    "transactions.write": "8",
+    "roles.read": "9",
+    "roles.write": "10"
+  },
+  "accountId": "1",
+  "conceptId": "1"
+}

@@ -1,4 +1,5 @@
 """Tipos públicos de roles separados de los modelos SQLAlchemy."""
+from enum import Enum
 import strawberry
 from strawberry.types import Info
 from .schema import CompanyUser, convert, execute
@@ -39,6 +40,56 @@ class CompanyUserRole:
     company_user: CompanyUser
     role: Role
     is_active: bool
+
+
+@strawberry.enum
+class PermissionResource(Enum):
+    COMPANY_USERS = 'company.users.'
+    ACCOUNTS = 'accounts.'
+    CONCEPTS = 'concepts.'
+    TRANSACTIONS = 'transactions.'
+    ROLES = 'roles.'
+
+
+@strawberry.input
+class SetRolePermissionsInput:
+    role_id: strawberry.ID
+    permission_ids: list[strawberry.ID]
+
+
+@strawberry.type
+class RolePermissionPlan:
+    role: Role
+    current: list[Permission]
+    to_activate: list[Permission]
+    to_deactivate: list[Permission]
+    unchanged: list[Permission]
+    final_count: int
+
+
+@strawberry.type
+class RolePermissionUpdate:
+    role: Role
+    activated: list[Permission]
+    deactivated: list[Permission]
+    unchanged: list[Permission]
+    final_count: int
+    changed: bool
+
+
+def public_plan(plan, update=False):
+    values = dict(role=public(Role, plan['role']),
+                  unchanged=[public(Permission, p) for p in plan['unchanged']],
+                  final_count=plan['final_count'])
+    if update:
+        return RolePermissionUpdate(**values,
+            activated=[public(Permission, p) for p in plan['to_activate']],
+            deactivated=[public(Permission, p) for p in plan['to_deactivate']],
+            changed=bool(plan['to_activate'] or plan['to_deactivate']))
+    return RolePermissionPlan(**values,
+        current=[public(Permission, p) for p in plan['current']],
+        to_activate=[public(Permission, p) for p in plan['to_activate']],
+        to_deactivate=[public(Permission, p) for p in plan['to_deactivate']])
 
 
 @strawberry.input
@@ -82,6 +133,18 @@ def public(kind, obj):
 @strawberry.type
 class AccessQuery:
     @strawberry.field
+    def permission_catalog(self, info: Info, actor_company_user_id: strawberry.ID,
+                           resource: PermissionResource | None = strawberry.UNSET) -> list[Permission]:
+        return execute(info, lambda s: [public(Permission, p) for p in actions.permission_catalog(s, None if resource is strawberry.UNSET else resource)],
+                       actor_company_user_id, 'roles.read')
+
+    @strawberry.field
+    def preview_role_permissions(self, info: Info, input: SetRolePermissionsInput,
+                                 actor_company_user_id: strawberry.ID) -> RolePermissionPlan | None:
+        return execute(info, lambda s: public_plan(actions.plan_role_permissions(s, input.role_id, input.permission_ids)),
+                       actor_company_user_id, 'roles.read')
+
+    @strawberry.field
     def roles(self, info: Info, actor_company_user_id: strawberry.ID,
               active_only: bool | None = strawberry.UNSET) -> list[Role]:
         return execute(info, lambda s: [public(Role,x) for x in actions.catalog(s,RoleModel,active_only)],
@@ -107,6 +170,12 @@ class AccessQuery:
 
 @strawberry.type
 class AccessMutation:
+    @strawberry.mutation
+    def set_role_permissions(self, info: Info, input: SetRolePermissionsInput,
+                             actor_company_user_id: strawberry.ID) -> RolePermissionUpdate | None:
+        return execute(info, lambda s: public_plan(actions.set_role_permissions(s, input.role_id, input.permission_ids), True),
+                       actor_company_user_id, 'roles.write')
+
     @strawberry.mutation
     def create_role(self, info: Info, actor_company_user_id: strawberry.ID, input: CreateRoleInput) -> Role:
         return execute(info, lambda s: public(Role,actions.create(s,RoleModel,fields(input))),actor_company_user_id,'roles.write')
