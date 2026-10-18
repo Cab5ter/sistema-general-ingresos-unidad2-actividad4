@@ -11,4 +11,4 @@ Configuración completa de permisos con GraphQL: catálogo filtrado, previsualiz
 
 Repositorio: https://github.com/Cab5ter/sistema-general-ingresos-unidad2-actividad4
 
-Autor consignado en el proyecto base: Enrique Zavala. Entrega individual.
+**Integrantes del equipo:** Enrique Zavala y Marcelo Medina.

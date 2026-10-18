@@ -2,7 +2,11 @@
 
 Continuación del Sistema General de Ingresos de la actividad 4. Se conservan Python, FastAPI, Strawberry, SQLAlchemy, MySQL, los cuatro roles, los diez permisos y las operaciones anteriores.
 
-Entrega individual. Autor consignado en el proyecto base: Enrique Zavala. Aportaciones de esta entrega: catálogo filtrado, cálculo compartido de planes, aplicación atómica de listas, pruebas de rollback, investigación, variables y evidencias E01-E10. Se conserva la autoría del código previo.
+Entrega en equipo.
+
+**Integrantes del equipo:** Enrique Zavala y Marcelo Medina.
+
+Aportaciones de la entrega: catálogo filtrado, cálculo compartido de planes, aplicación atómica de listas, pruebas de rollback, investigación, variables y evidencias E01-E10. Se conserva la autoría del código previo.
 
 Repositorio: https://github.com/Cab5ter/sistema-general-ingresos-unidad2-actividad4
 

@@ -1,5 +1,7 @@
 # Evidencias · Unidad II · Actividad 5
 
+**Integrantes del equipo:** Enrique Zavala y Marcelo Medina.
+
 Ejecución con Python 3.12.14, MySQL Community Server 8.4.11 y API local 8017. Los datos pertenecen a una empresa ficticia. Se utilizó la membresía de Ana, identificada en `ids.json`; no se incluyeron contraseñas, tokens ni hashes. Las imágenes GraphiQL muestran peticiones ejecutadas en la API. Las imágenes SQL son un visor de resultados reales de SQLAlchemy, con su consulta y JSON disponibles; no son capturas de Workbench.
 
 Cada registro de `evidencias/registro.json` contiene operación, variables y respuesta, o la consulta SQL y todas sus filas. Las variables de las peticiones están también en `variables/`. La verificación compara IDs, parejas y estados, no solo conteos.

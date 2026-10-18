@@ -1,6 +1,8 @@
 # Unidad II · Actividad 5: Configurar permisos con GraphQL
 
-Continuación del Sistema General de Ingresos. Autor consignado en el proyecto base: Enrique Zavala. Entrega individual.
+Continuación del Sistema General de Ingresos. Entrega en equipo.
+
+**Integrantes del equipo:** Enrique Zavala y Marcelo Medina.
 
 Incluye catálogo por recurso, previsualización y actualización atómica e idempotente; investigación, variables reales, configuraciones por códigos, SQL, capturas y pruebas E01-E10.
 

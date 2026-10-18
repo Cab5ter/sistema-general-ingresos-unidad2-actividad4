@@ -1,5 +1,7 @@
 # Investigación aplicada: configuración completa de permisos
 
+**Integrantes del equipo:** Enrique Zavala y Marcelo Medina.
+
 ## 1. Identidad, decisiones y configuración
 
 Autenticar comprueba quién intenta entrar. En nuestro sistema, login verifica una contraseña contra su hash Argon2id y devuelve un token. Autorizar responde si una petición concreta puede realizar una acción. Configurar permisos establece las acciones asociadas a un puesto. Aunque las tres ideas se relacionan, cambiar una lista no verifica la identidad de quien solicita el cambio. Por ejemplo, añadir accounts.write a CAPTURISTA permite crear cuentas a las personas con ese rol; no demuestra que quien abrió GraphiQL sea Ana.
