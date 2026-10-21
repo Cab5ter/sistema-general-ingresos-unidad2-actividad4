@@ -1,5 +1,5 @@
-mutation ($actor: ID!, $input: CreateRoleInput!) {
-  createRole(actorCompanyUserId: $actor, input: $input) {
+mutation ($input: CreateRoleInput!) {
+  createRole(input: $input) {
     id
     code
     name

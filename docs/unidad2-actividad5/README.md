@@ -1,5 +1,7 @@
 # Unidad II · Actividad 5 · Configurar permisos con GraphQL
 
+> Historial de la actividad 5. Desde la actividad 6, las operaciones usan el token de login en Authorization: Bearer. Los antiguos selectores de actor ya no existen en el esquema. Los scripts y capturas históricos documentan el contrato de aquella entrega; para reproducir el contrato actual, seguir `../unidad2-actividad6/README.md`.
+
 Continuación del Sistema General de Ingresos de la actividad 4. Se conservan Python, FastAPI, Strawberry, SQLAlchemy, MySQL, los cuatro roles, los diez permisos y las operaciones anteriores.
 
 Entrega en equipo.

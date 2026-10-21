@@ -1,5 +1,4 @@
 {
-  "actor": "2",
   "input": {
     "code": "audit.read",
     "name": "Leer auditoría",

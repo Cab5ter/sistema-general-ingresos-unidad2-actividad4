@@ -1,5 +1,5 @@
-query ($actor: ID!, $role: ID!) {
-  rolePermissions(actorCompanyUserId: $actor, roleId: $role) {
+query ($role: ID!) {
+  rolePermissions(roleId: $role) {
     id
     isActive
     role {

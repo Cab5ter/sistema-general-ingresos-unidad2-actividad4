@@ -1,5 +1,6 @@
 """Prueba HTTP del servidor local, sin imprimir credenciales."""
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from decimal import Decimal, localcontext
@@ -7,7 +8,6 @@ from pathlib import Path
 import httpx
 
 url = sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8000/graphql'
-actor = sys.argv[2] if len(sys.argv) > 2 else '1'
 credentials = json.loads(Path('.demo-credentials.json').read_text(encoding='utf-8'))
 records = []
 
@@ -23,16 +23,16 @@ with httpx.Client(timeout=20) as client:
     assert 'errors' not in logged, 'Falló login de demostración.'
     auth = {'Authorization':'Bearer '+logged['data']['login']['token']}
     records.append({'operacion':'login','esperado':'Token válido y usuario autenticado','obtenido':'Autenticado; credenciales y token omitidos','estado':'PASS'})
-    query = 'query($actor:ID!){transactions(actorCompanyUserId:$actor,limit:100){id amount transactionType capturedBy account{id companyId} concept{id}}}'
-    result = request(client,query,{'actor':actor},auth)
+    query = 'query{transactions(limit:100){id amount transactionType capturedBy account{id companyId} concept{id}}}'
+    result = request(client,query,{},auth)
     assert 'errors' not in result
     rows = result['data']['transactions']
     assert len(rows) >= 20
     assert all(x['capturedBy']==logged['data']['login']['user']['id'] for x in rows)
     records.append({'operacion':query,'esperado':'Al menos 20 movimientos; captura del usuario demo','obtenido':result['data'],'estado':'PASS'})
     cid = rows[0]['account']['companyId']
-    query = 'query($id:ID!,$actor:ID!){accounts(actorCompanyUserId:$actor,companyId:$id){id} concepts(actorCompanyUserId:$actor,companyId:$id){id conceptType}}'
-    result = request(client,query,{'id':cid,'actor':actor},auth)
+    query = 'query($id:ID!){accounts(companyId:$id){id} concepts(companyId:$id){id conceptType}}'
+    result = request(client,query,{'id':cid},auth)
     data = result['data']
     assert len(data['accounts']) >= 3
     assert all(sum(x['conceptType']==kind for x in data['concepts'])>=5 for kind in ('INCOME','EXPENSE'))
@@ -40,8 +40,8 @@ with httpx.Client(timeout=20) as client:
     relations = 0
     for account in data['accounts']:
         aid = account['id']
-        query = 'query($a:ID!,$actor:ID!){accountConcepts(actorCompanyUserId:$actor,accountId:$a){id} accountBalance(actorCompanyUserId:$actor,accountId:$a)}'
-        result = request(client,query,{'a':aid,'actor':actor},auth)
+        query = 'query($a:ID!){accountConcepts(accountId:$a){id} accountBalance(accountId:$a)}'
+        result = request(client,query,{'a':aid},auth)
         assert 'errors' not in result
         relations += len(result['data']['accountConcepts'])
         with localcontext() as ctx:
@@ -51,9 +51,10 @@ with httpx.Client(timeout=20) as client:
         records.append({'operacion':query,'variables':{'a':aid},'esperado':{'balance':str(expected)},'obtenido':result['data'],'estado':'PASS'})
     assert relations >= 10
     result = request(client,'{transactions{id}}')
-    assert result.get('errors') and 'actorCompanyUserId' in result['errors'][0]['message']
-    records.append({'operacion':'{transactions{id}} sin actor','esperado':'actorCompanyUserId obligatorio','obtenido':result,'estado':'PASS'})
+    assert result.get('errors') and result['errors'][0]['extensions']['code']=='UNAUTHENTICATED'
+    records.append({'operacion':'{transactions{id}} sin token','esperado':'Bearer obligatorio','obtenido':result,'estado':'PASS'})
 
-path = Path('docs/evidencias/unidad2/smoke-finance.json')
+path = Path(os.getenv('EVIDENCE_DIR','entrega/evidencias-actividad6'))/'smoke-finance.json'
+path.parent.mkdir(parents=True,exist_ok=True)
 path.write_text(json.dumps({'fechaUTC':datetime.now(timezone.utc).isoformat(),'url':url,'casos':records},indent=2,ensure_ascii=False),encoding='utf-8')
 print(f'{len(records)} verificaciones HTTP correctas. Evidencia: {path}')

@@ -1,5 +1,5 @@
-query ($actor: ID!, $id: ID!) {
-  companyUsers(actorCompanyUserId: $actor, companyId: $id) {
+query ($id: ID!) {
+  companyUsers(companyId: $id) {
     id
     isAdmin
     isActive

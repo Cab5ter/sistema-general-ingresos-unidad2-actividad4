@@ -171,9 +171,9 @@ def test_catalog_crud_codes_filters_and_no_physical_delete(api,data):
     api.call(CREATE_PERMISSION,{'actor':actor,'input':{'code':'AUDIT.READ','name':'Duplicado'}},code='CONFLICT')
     api.call(DEACTIVATE_ROLE,{'actor':actor,'id':role['id']})
     assert count(api,Role)==5
-    query='query($a:ID!,$active:Boolean){roles(actorCompanyUserId:$a,activeOnly:$active){id}}'
-    assert len(api.call(query,{'a':actor,'active':True})['roles'])==4
-    assert len(api.call(query,{'a':actor,'active':False})['roles'])==5
+    query='query($active:Boolean){roles(activeOnly:$active){id}}'
+    assert len(api.call(query,{'actor':actor,'active':True})['roles'])==4
+    assert len(api.call(query,{'actor':actor,'active':False})['roles'])==5
     api.call(ASSIGN_ROLE,{'actor':actor,'input':{'companyUserId':data['members']['CONSULTA'],'roleId':role['id']}},code='BAD_INPUT')
     api.call(DEACTIVATE_ROLE,{'actor':actor,'id':data['roles']['CONSULTA']},code='CONFLICT')
     for query,values in [(CREATE_ROLE,{'input':{'code':'X','name':'X'}}),(CREATE_PERMISSION,{'input':{'code':'x.read','name':'X'}}),(DEACTIVATE_ROLE,{'id':role['id']})]:
@@ -200,6 +200,7 @@ def test_previous_membership_transition_is_consulta_not_admin(api):
         row=db.scalar(select(CompanyUserRole).where(CompanyUserRole.company_user_id==mid))
         assert row.role.code=='CONSULTA'
         assert row.company_user.is_admin
+    api.login_member(mid, PASSWORD)
     api.call(ROLES,{'actor':str(mid)},code='FORBIDDEN')
 
 
@@ -217,7 +218,7 @@ def test_database_unique_relations_and_one_active_role(api,data):
 
 def test_concurrent_role_changes_leave_one_active(api,data):
     def change(role):
-        return api.client.post('/graphql',json={'query':ASSIGN_ROLE,'variables':{'actor':data['admin'],'input':{'companyUserId':data['members']['CAPTURISTA'],'roleId':data['roles'][role]}}}).json()
+        return api.request(ASSIGN_ROLE,{'actor':data['admin'],'input':{'companyUserId':data['members']['CAPTURISTA'],'roleId':data['roles'][role]}}).json()
     with ThreadPoolExecutor(max_workers=2) as pool:
         results=list(pool.map(change,['CONTADOR','CONSULTA']))
     assert all('errors' not in x for x in results),results
@@ -225,7 +226,7 @@ def test_concurrent_role_changes_leave_one_active(api,data):
         assert db.scalar(select(func.count()).select_from(CompanyUserRole).where(CompanyUserRole.company_user_id==int(data['members']['CAPTURISTA']),CompanyUserRole.is_active.is_(True)))==1
 
 
-def test_login_unchanged_hash_not_public_and_actor_required(api,data):
+def test_login_hash_not_public_and_bearer_required(api,data):
     result=api.call(LOGIN,{'input':{'email':'admin@example.com','password':PASSWORD}})['login']
     assert result['token'] and result['tokenType']=='Bearer'
     api.call(LOGIN,{'input':{'email':'admin@example.com','password':'incorrecto'}},code='UNAUTHENTICATED')
@@ -233,9 +234,9 @@ def test_login_unchanged_hash_not_public_and_actor_required(api,data):
         assert db.get(m.CompanyUser,int(data['admin'])).user.password_hash.startswith('$argon2id$')
     fields=api.call('{__type(name:"User"){fields{name}}}')['__type']['fields']
     assert not {'password','passwordHash'} & {f['name'] for f in fields}
-    api.call('{roles{code}}',code='GRAPHQL_VALIDATION')
-    api.call(ROLES,{'actor':'999999'},code='FORBIDDEN')
-    # Mecanismo académico: actor explícito funciona sin cabecera JWT.
+    api.call('{roles{code}}',code='UNAUTHENTICATED')
+    api.call('{roles(actorCompanyUserId:"1"){code}}',code='GRAPHQL_VALIDATION')
+    # El fixture envía el token obtenido por login, sin un argumento de actor.
     assert len(api.call(ROLES,{'actor':data['admin']})['roles'])==4
 
 

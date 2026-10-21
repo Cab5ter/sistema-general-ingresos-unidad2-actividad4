@@ -1,6 +1,5 @@
-query ($actor: ID!, $a: ID, $type: TransactionType, $limit: Int, $offset: Int) {
+query ($a: ID, $type: TransactionType, $limit: Int, $offset: Int) {
   transactions(
-    actorCompanyUserId: $actor
     accountId: $a
     transactionType: $type
     limit: $limit

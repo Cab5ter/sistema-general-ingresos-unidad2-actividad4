@@ -17,15 +17,23 @@ def prepare():
     settings = Settings.from_env()
     endpoint = os.getenv('ACTIVITY4_URL', 'http://127.0.0.1:8007/graphql')
     private = Path('.activity4-credentials.json')
-    passwords = json.loads(private.read_text()) if private.exists() else {
-        person: secrets.token_urlsafe(24) for person in ('Ana', 'Luis', 'María', 'José', 'Pedro')}
+    if private.exists():
+        try:
+            passwords = json.loads(private.read_text(encoding='utf-8'))
+        except UnicodeDecodeError:
+            # La versión anterior usaba la codificación local de Windows.
+            passwords = json.loads(private.read_text(encoding='cp1252'))
+            private.write_text(json.dumps(passwords, ensure_ascii=False), encoding='utf-8')
+    else:
+        passwords = {person: secrets.token_urlsafe(24) for person in ('Ana', 'Luis', 'María', 'José', 'Pedro')}
     if not private.exists():
-        private.write_text(json.dumps(passwords, ensure_ascii=False))
+        private.write_text(json.dumps(passwords, ensure_ascii=False), encoding='utf-8')
         private.chmod(0o600)
     engine, sessions = database(settings.database_url)
+    auth = {}
     def call(query, variables=None, bootstrap=False):
         r = httpx.post(endpoint, json={'query': query, 'variables': variables or {}},
-            headers={'X-Bootstrap-Key': settings.bootstrap_key} if bootstrap else {}, timeout=30)
+            headers={'X-Bootstrap-Key': settings.bootstrap_key} if bootstrap else auth, timeout=30)
         r.raise_for_status()
         result = r.json()
         if 'errors' in result:
@@ -50,36 +58,41 @@ def prepare():
                 if person == 'Ana':
                     mid = call('mutation($i:CreateCompanyAdminInput!){createCompanyAdmin(input:$i){id isAdmin}}', {'i':fields}, True)['createCompanyAdmin']['id']
                 else:
-                    mid = call('mutation($a:ID!,$i:CreateCompanyUserInput!){createCompanyUser(actorCompanyUserId:$a,input:$i){id}}',
-                        {'a':actors['Ana'],'i':fields})['createCompanyUser']['id']
+                    mid = call('mutation($i:CreateCompanyUserInput!){createCompanyUser(input:$i){id}}',
+                        {'i':fields})['createCompanyUser']['id']
             actors[person] = mid
-        catalogs = call('query($a:ID!){roles(actorCompanyUserId:$a){id code} permissions(actorCompanyUserId:$a){id code}}', {'a':actors['Ana']})
+            if person == 'Ana':
+                logged = call('mutation($i:LoginInput!){login(input:$i){token}}',
+                    {'i': {'email': mail, 'password': passwords['Ana']}})['login']
+                auth = {'Authorization': 'Bearer ' + logged['token']}
+        catalogs = call('query{roles{id code} permissions{id code}}')
         roles = {r['code']:r['id'] for r in catalogs['roles']}
         permissions = {p['code']:p['id'] for p in catalogs['permissions']}
         for person, role in [('Luis','CONTADOR'),('María','CAPTURISTA'),('José','CAPTURISTA'),('Pedro','CONSULTA')]:
-            call('mutation($a:ID!,$i:AssignRoleInput!){assignRole(actorCompanyUserId:$a,input:$i){role{code} isActive}}',
-                {'a':actors['Ana'],'i':{'companyUserId':actors[person],'roleId':roles[role]}})
+            call('mutation($i:AssignRoleInput!){assignRole(input:$i){role{code} isActive}}',
+                {'i':{'companyUserId':actors[person],'roleId':roles[role]}})
         with sessions() as db:
             acc = db.scalar(select(m.Account).where(m.Account.company_id==int(cid),m.Account.name_key=='caja actividad 4'))
             con = db.scalar(select(m.Concept).where(m.Concept.company_id==int(cid),m.Concept.name_key=='ingreso actividad 4'))
             aid = str(acc.id) if acc else None
             coid = str(con.id) if con else None
         if aid is None:
-            aid = call('mutation($a:ID!,$i:CreateAccountInput!){createAccount(actorCompanyUserId:$a,input:$i){id}}',
-                {'a':actors['Ana'],'i':{'companyId':cid,'accountType':'CASH','name':'Caja actividad 4'}})['createAccount']['id']
+            aid = call('mutation($i:CreateAccountInput!){createAccount(input:$i){id}}',
+                {'i':{'companyId':cid,'accountType':'CASH','name':'Caja actividad 4'}})['createAccount']['id']
         if coid is None:
-            coid = call('mutation($a:ID!,$i:CreateConceptInput!){createConcept(actorCompanyUserId:$a,input:$i){id}}',
-                {'a':actors['Ana'],'i':{'companyId':cid,'conceptType':'INCOME','name':'Ingreso actividad 4'}})['createConcept']['id']
+            coid = call('mutation($i:CreateConceptInput!){createConcept(input:$i){id}}',
+                {'i':{'companyId':cid,'conceptType':'INCOME','name':'Ingreso actividad 4'}})['createConcept']['id']
         with sessions() as db:
             link = db.scalar(select(m.AccountConcept).where(m.AccountConcept.account_id==int(aid),m.AccountConcept.concept_id==int(coid)))
         if link is None or not link.is_active:
-            call('mutation($a:ID!,$i:AssignConceptToAccountInput!){assignConceptToAccount(actorCompanyUserId:$a,input:$i){id}}',
-                {'a':actors['Ana'],'i':{'accountId':aid,'conceptId':coid}})
+            call('mutation($i:AssignConceptToAccountInput!){assignConceptToAccount(input:$i){id}}',
+                {'i':{'accountId':aid,'conceptId':coid}})
         result = {'companyId':cid,'actors':actors,'roles':roles,'permissions':permissions,'accountId':aid,'conceptId':coid}
-        path = Path('docs/evidencias/unidad2-actividad4/ids.json')
+        path = Path(os.getenv('EVIDENCE_DIR', 'entrega/evidencias-actividad6')) / 'ids.json'
         path.parent.mkdir(parents=True,exist_ok=True)
-        path.write_text(json.dumps(result,ensure_ascii=False,indent=2))
+        path.write_text(json.dumps(result,ensure_ascii=False,indent=2), encoding='utf-8')
         print(json.dumps(result,ensure_ascii=False,indent=2))
+        return result
     finally:
         engine.dispose()
 

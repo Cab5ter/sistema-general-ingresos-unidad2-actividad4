@@ -1,0 +1,28 @@
+# Cada persona ejecuta Entrar con sus propias credenciales locales.
+# Después: Headers = {"Authorization":"Bearer TOKEN_DEVUELTO_POR_LOGIN"}
+# No incluir tokens vigentes ni contraseñas reales en archivos versionados.
+mutation Entrar($input: LoginInput!) {
+  login(input: $input) { tokenType token user { name } }
+}
+
+mutation Cuenta($input: CreateAccountInput!) {
+  createAccount(input: $input) { id companyId name }
+}
+
+mutation Movimiento($input: CreateTransactionInput!) {
+  createTransaction(input: $input) { id amount capturedBy }
+}
+
+mutation CambiarPuesto($input: AssignRoleInput!) {
+  assignRole(input: $input) { isActive role { code } companyUser { id } }
+}
+
+query Cuentas($company: ID!) {
+  accounts(companyId: $company) { id companyId name }
+}
+
+# Catálogos para obtener los IDs con el token de Ana.
+query Catalogos {
+  roles { id code }
+  permissions { id code }
+}

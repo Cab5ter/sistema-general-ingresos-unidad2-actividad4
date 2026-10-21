@@ -180,57 +180,57 @@ def financial(kind, obj):
 @strawberry.type
 class FinanceQuery:
     @strawberry.field
-    def accounts(self, info: Info, actor_company_user_id: strawberry.ID, company_id: strawberry.ID,
+    def accounts(self, info: Info, company_id: strawberry.ID,
                  account_type: AccountType | None = strawberry.UNSET,
                  active_only: bool | None = strawberry.UNSET) -> list[Account]:
         return execute(info, lambda s: [financial(Account, x) for x in s.catalog(
-            m.Account, company_id, plain(account_type), plain(active_only))], actor_company_user_id, 'accounts.read')
+            m.Account, company_id, plain(account_type), plain(active_only))], 'accounts.read')
 
     @strawberry.field
-    def concepts(self, info: Info, actor_company_user_id: strawberry.ID, company_id: strawberry.ID,
+    def concepts(self, info: Info, company_id: strawberry.ID,
                  concept_type: ConceptType | None = strawberry.UNSET,
                  active_only: bool | None = strawberry.UNSET) -> list[Concept]:
         return execute(info, lambda s: [financial(Concept, x) for x in s.catalog(
-            m.Concept, company_id, plain(concept_type), plain(active_only))], actor_company_user_id, 'concepts.read')
+            m.Concept, company_id, plain(concept_type), plain(active_only))], 'concepts.read')
 
     @strawberry.field
-    def account_concepts(self, info: Info, actor_company_user_id: strawberry.ID, account_id: strawberry.ID) -> list[AccountConcept]:
-        return execute(info, lambda s: [financial(AccountConcept, x) for x in s.links(account_id)], actor_company_user_id, 'concepts.read')
+    def account_concepts(self, info: Info, account_id: strawberry.ID) -> list[AccountConcept]:
+        return execute(info, lambda s: [financial(AccountConcept, x) for x in s.links(account_id)], 'concepts.read')
 
     @strawberry.field
-    def transactions(self, info: Info, actor_company_user_id: strawberry.ID, account_id: strawberry.ID | None = strawberry.UNSET,
+    def transactions(self, info: Info, account_id: strawberry.ID | None = strawberry.UNSET,
                      transaction_type: TransactionType | None = strawberry.UNSET,
                      limit: int | None = strawberry.UNSET, offset: int | None = strawberry.UNSET) -> list[Transaction]:
         return execute(info, lambda s: [financial(Transaction, x) for x in s.transactions(
-            plain(account_id), plain(transaction_type), plain(limit), plain(offset))], actor_company_user_id, 'transactions.read')
+            plain(account_id), plain(transaction_type), plain(limit), plain(offset))], 'transactions.read')
 
     @strawberry.field(description='Extensión: ingresos activos menos egresos activos, sin paginación.')
-    def account_balance(self, info: Info, actor_company_user_id: strawberry.ID, account_id: strawberry.ID) -> Decimal:
-        return execute(info, lambda s: s.balance(account_id), actor_company_user_id, 'transactions.read')
+    def account_balance(self, info: Info, account_id: strawberry.ID) -> Decimal:
+        return execute(info, lambda s: s.balance(account_id), 'transactions.read')
 
 
 @strawberry.type
 class FinanceMutation:
     @strawberry.mutation
-    def create_account(self, info: Info, actor_company_user_id: strawberry.ID, input: CreateAccountInput) -> Account:
-        return execute(info, lambda s: financial(Account, s.create_catalog(m.Account, fields(input))), actor_company_user_id, 'accounts.write')
+    def create_account(self, info: Info, input: CreateAccountInput) -> Account:
+        return execute(info, lambda s: financial(Account, s.create_catalog(m.Account, fields(input))), 'accounts.write')
 
     @strawberry.mutation
-    def create_concept(self, info: Info, actor_company_user_id: strawberry.ID, input: CreateConceptInput) -> Concept:
-        return execute(info, lambda s: financial(Concept, s.create_catalog(m.Concept, fields(input))), actor_company_user_id, 'concepts.write')
+    def create_concept(self, info: Info, input: CreateConceptInput) -> Concept:
+        return execute(info, lambda s: financial(Concept, s.create_catalog(m.Concept, fields(input))), 'concepts.write')
 
     @strawberry.mutation
-    def assign_concept_to_account(self, info: Info, actor_company_user_id: strawberry.ID, input: AssignConceptToAccountInput) -> AccountConcept:
-        return execute(info, lambda s: financial(AccountConcept, s.assign(input.account_id, input.concept_id)), actor_company_user_id, 'concepts.write')
+    def assign_concept_to_account(self, info: Info, input: AssignConceptToAccountInput) -> AccountConcept:
+        return execute(info, lambda s: financial(AccountConcept, s.assign(input.account_id, input.concept_id)), 'concepts.write')
 
     @strawberry.mutation
-    def remove_concept_from_account(self, info: Info, actor_company_user_id: strawberry.ID, account_id: strawberry.ID, concept_id: strawberry.ID) -> bool:
-        return execute(info, lambda s: s.remove_link(account_id, concept_id), actor_company_user_id, 'concepts.write')
+    def remove_concept_from_account(self, info: Info, account_id: strawberry.ID, concept_id: strawberry.ID) -> bool:
+        return execute(info, lambda s: s.remove_link(account_id, concept_id), 'concepts.write')
 
     @strawberry.mutation
-    def create_transaction(self, info: Info, actor_company_user_id: strawberry.ID, input: CreateTransactionInput) -> Transaction:
-        return execute(info, lambda s: financial(Transaction, s.create_transaction(fields(input))), actor_company_user_id, 'transactions.write')
+    def create_transaction(self, info: Info, input: CreateTransactionInput) -> Transaction:
+        return execute(info, lambda s: financial(Transaction, s.create_transaction(fields(input))), 'transactions.write')
 
     @strawberry.mutation
-    def delete_transaction(self, info: Info, actor_company_user_id: strawberry.ID, id: strawberry.ID) -> Transaction:
-        return execute(info, lambda s: financial(Transaction, s.delete_transaction(id)), actor_company_user_id, 'transactions.write')
+    def delete_transaction(self, info: Info, id: strawberry.ID) -> Transaction:
+        return execute(info, lambda s: financial(Transaction, s.delete_transaction(id)), 'transactions.write')

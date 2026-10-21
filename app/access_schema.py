@@ -133,71 +133,57 @@ def public(kind, obj):
 @strawberry.type
 class AccessQuery:
     @strawberry.field
-    def permission_catalog(self, info: Info, actor_company_user_id: strawberry.ID,
-                           resource: PermissionResource | None = strawberry.UNSET) -> list[Permission]:
-        return execute(info, lambda s: [public(Permission, p) for p in actions.permission_catalog(s, None if resource is strawberry.UNSET else resource)],
-                       actor_company_user_id, 'roles.read')
+    def permission_catalog(self, info: Info, resource: PermissionResource | None = strawberry.UNSET) -> list[Permission]:
+        return execute(info, lambda s: [public(Permission, p) for p in actions.permission_catalog(s, None if resource is strawberry.UNSET else resource)], 'roles.read')
 
     @strawberry.field
-    def preview_role_permissions(self, info: Info, input: SetRolePermissionsInput,
-                                 actor_company_user_id: strawberry.ID) -> RolePermissionPlan | None:
-        return execute(info, lambda s: public_plan(actions.plan_role_permissions(s, input.role_id, input.permission_ids)),
-                       actor_company_user_id, 'roles.read')
+    def preview_role_permissions(self, info: Info, input: SetRolePermissionsInput) -> RolePermissionPlan | None:
+        return execute(info, lambda s: public_plan(actions.plan_role_permissions(s, input.role_id, input.permission_ids)), 'roles.read')
 
     @strawberry.field
-    def roles(self, info: Info, actor_company_user_id: strawberry.ID,
-              active_only: bool | None = strawberry.UNSET) -> list[Role]:
-        return execute(info, lambda s: [public(Role,x) for x in actions.catalog(s,RoleModel,active_only)],
-                       actor_company_user_id,'roles.read')
+    def roles(self, info: Info, active_only: bool | None = strawberry.UNSET) -> list[Role]:
+        return execute(info, lambda s: [public(Role,x) for x in actions.catalog(s,RoleModel,active_only)], 'roles.read')
 
     @strawberry.field
-    def role(self, info: Info, actor_company_user_id: strawberry.ID, id: strawberry.ID) -> Role | None:
+    def role(self, info: Info, id: strawberry.ID) -> Role | None:
         from .service import identifier
-        return execute(info, lambda s: public(Role,s.db.get(RoleModel,identifier(id))), actor_company_user_id,'roles.read')
+        return execute(info, lambda s: public(Role,s.db.get(RoleModel,identifier(id))), 'roles.read')
 
     @strawberry.field
-    def permissions(self, info: Info, actor_company_user_id: strawberry.ID,
-                    active_only: bool | None = strawberry.UNSET) -> list[Permission]:
-        return execute(info, lambda s: [public(Permission,x) for x in actions.catalog(s,PermissionModel,active_only)],
-                       actor_company_user_id,'roles.read')
+    def permissions(self, info: Info, active_only: bool | None = strawberry.UNSET) -> list[Permission]:
+        return execute(info, lambda s: [public(Permission,x) for x in actions.catalog(s,PermissionModel,active_only)], 'roles.read')
 
     @strawberry.field
-    def role_permissions(self, info: Info, actor_company_user_id: strawberry.ID,
-                         role_id: strawberry.ID) -> list[RolePermission]:
-        return execute(info, lambda s: [public(RolePermission,x) for x in actions.role_permissions(s,role_id)],
-                       actor_company_user_id,'roles.read')
+    def role_permissions(self, info: Info, role_id: strawberry.ID) -> list[RolePermission]:
+        return execute(info, lambda s: [public(RolePermission,x) for x in actions.role_permissions(s,role_id)], 'roles.read')
 
 
 @strawberry.type
 class AccessMutation:
     @strawberry.mutation
-    def set_role_permissions(self, info: Info, input: SetRolePermissionsInput,
-                             actor_company_user_id: strawberry.ID) -> RolePermissionUpdate | None:
-        return execute(info, lambda s: public_plan(actions.set_role_permissions(s, input.role_id, input.permission_ids), True),
-                       actor_company_user_id, 'roles.write')
+    def set_role_permissions(self, info: Info, input: SetRolePermissionsInput) -> RolePermissionUpdate | None:
+        return execute(info, lambda s: public_plan(actions.set_role_permissions(s, input.role_id, input.permission_ids), True), 'roles.write')
 
     @strawberry.mutation
-    def create_role(self, info: Info, actor_company_user_id: strawberry.ID, input: CreateRoleInput) -> Role:
-        return execute(info, lambda s: public(Role,actions.create(s,RoleModel,fields(input))),actor_company_user_id,'roles.write')
+    def create_role(self, info: Info, input: CreateRoleInput) -> Role:
+        return execute(info, lambda s: public(Role,actions.create(s,RoleModel,fields(input))), 'roles.write')
 
     @strawberry.mutation
-    def deactivate_role(self, info: Info, actor_company_user_id: strawberry.ID, id: strawberry.ID) -> Role:
-        return execute(info, lambda s: public(Role,actions.deactivate(s,id)),actor_company_user_id,'roles.write')
+    def deactivate_role(self, info: Info, id: strawberry.ID) -> Role:
+        return execute(info, lambda s: public(Role,actions.deactivate(s,id)), 'roles.write')
 
     @strawberry.mutation
-    def create_permission(self, info: Info, actor_company_user_id: strawberry.ID, input: CreatePermissionInput) -> Permission:
-        return execute(info, lambda s: public(Permission,actions.create(s,PermissionModel,fields(input))),actor_company_user_id,'roles.write')
+    def create_permission(self, info: Info, input: CreatePermissionInput) -> Permission:
+        return execute(info, lambda s: public(Permission,actions.create(s,PermissionModel,fields(input))), 'roles.write')
 
     @strawberry.mutation
-    def assign_permission_to_role(self, info: Info, actor_company_user_id: strawberry.ID,
-                                  input: AssignPermissionToRoleInput) -> RolePermission:
-        return execute(info, lambda s: public(RolePermission,actions.permission_pair(s,input.role_id,input.permission_id)),actor_company_user_id,'roles.write')
+    def assign_permission_to_role(self, info: Info, input: AssignPermissionToRoleInput) -> RolePermission:
+        return execute(info, lambda s: public(RolePermission,actions.permission_pair(s,input.role_id,input.permission_id)), 'roles.write')
 
     @strawberry.mutation
-    def remove_permission_from_role(self, info: Info, actor_company_user_id: strawberry.ID,
-                                    role_id: strawberry.ID, permission_id: strawberry.ID) -> bool:
-        return execute(info, lambda s: actions.permission_pair(s,role_id,permission_id,remove=True),actor_company_user_id,'roles.write')
+    def remove_permission_from_role(self, info: Info, role_id: strawberry.ID, permission_id: strawberry.ID) -> bool:
+        return execute(info, lambda s: actions.permission_pair(s,role_id,permission_id,remove=True), 'roles.write')
 
     @strawberry.mutation
-    def assign_role(self, info: Info, actor_company_user_id: strawberry.ID, input: AssignRoleInput) -> CompanyUserRole:
-        return execute(info, lambda s: public(CompanyUserRole,actions.assign_role(s,input.company_user_id,input.role_id)),actor_company_user_id,'roles.write')
+    def assign_role(self, info: Info, input: AssignRoleInput) -> CompanyUserRole:
+        return execute(info, lambda s: public(CompanyUserRole,actions.assign_role(s,input.company_user_id,input.role_id)), 'roles.write')

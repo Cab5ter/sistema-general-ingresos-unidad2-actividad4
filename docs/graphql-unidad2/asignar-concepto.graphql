@@ -1,5 +1,5 @@
-mutation ($actor: ID!, $input: AssignConceptToAccountInput!) {
-  assignConceptToAccount(actorCompanyUserId: $actor, input: $input) {
+mutation ($input: AssignConceptToAccountInput!) {
+  assignConceptToAccount(input: $input) {
     id
     isActive
     createdAt

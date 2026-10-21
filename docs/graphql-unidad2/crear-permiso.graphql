@@ -1,5 +1,5 @@
-mutation ($actor: ID!, $input: CreatePermissionInput!) {
-  createPermission(actorCompanyUserId: $actor, input: $input) {
+mutation ($input: CreatePermissionInput!) {
+  createPermission(input: $input) {
     id
     code
     name

@@ -7,13 +7,7 @@ from .service import Service, fail, identifier, name
 
 class FinanceService(Service):
     def company_ids(self):
-        if self.actor_company_user_id is not None:
-            from .access import membership
-            return [membership(self.db, self.actor_company_user_id).company_id]
-        user = self.actor()
-        return list(self.db.scalars(select(m.CompanyUser.company_id).join(m.Company).where(
-            m.CompanyUser.user_id == user.id, m.CompanyUser.is_active.is_(True),
-            m.Company.is_active.is_(True))))
+        return [self.leer_actor().company_id]
 
     def authorize(self, company_id):
         if company_id not in self.company_ids():

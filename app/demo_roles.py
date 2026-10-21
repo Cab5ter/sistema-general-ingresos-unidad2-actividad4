@@ -29,7 +29,9 @@ def prepare(settings):
                 admin=svc.create_member({'company_id':company.id,'name':'Administrador RBAC','email':'admin.roles@example.com','password':passwords['ADMINISTRADOR']},True)
             else:
                 admin=db.scalar(select(m.CompanyUser).where(m.CompanyUser.company_id==company.id,m.CompanyUser.is_admin.is_(True)))
-            svc.actor_company_user_id=admin.id
+            token, _ = svc.login({'email': admin.user.email, 'password': passwords['ADMINISTRADOR']})
+            svc.headers = {'authorization': 'Bearer ' + token}
+            svc.leer_actor()
             actors={'ADMINISTRADOR':str(admin.id)}
             svc.require('roles.write')
             for role in ('CONTADOR','CAPTURISTA','CONSULTA'):

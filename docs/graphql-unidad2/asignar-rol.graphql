@@ -1,5 +1,5 @@
-mutation ($actor: ID!, $input: AssignRoleInput!) {
-  assignRole(actorCompanyUserId: $actor, input: $input) {
+mutation ($input: AssignRoleInput!) {
+  assignRole(input: $input) {
     id
     isActive
     role {

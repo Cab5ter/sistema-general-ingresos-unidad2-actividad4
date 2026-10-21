@@ -17,9 +17,9 @@ type RolePermissionUpdate {
   changed: Boolean!
 }
 extend type Query {
-  permissionCatalog(actorCompanyUserId: ID!, resource: PermissionResource): [Permission!]!
-  previewRolePermissions(input: SetRolePermissionsInput!, actorCompanyUserId: ID!): RolePermissionPlan
+  permissionCatalog(resource: PermissionResource): [Permission!]!
+  previewRolePermissions(input: SetRolePermissionsInput!): RolePermissionPlan
 }
 extend type Mutation {
-  setRolePermissions(input: SetRolePermissionsInput!, actorCompanyUserId: ID!): RolePermissionUpdate
+  setRolePermissions(input: SetRolePermissionsInput!): RolePermissionUpdate
 }

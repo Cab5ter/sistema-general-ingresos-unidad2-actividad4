@@ -42,11 +42,35 @@ def api(tmp_path,request):
     with TestClient(app) as client:
         class API:
             bootstrap={'X-Bootstrap-Key':settings.bootstrap_key}
-            def call(self,query,variables=None,headers=None,code=None):
-                response=client.post('/graphql',json={'query':query,'variables':variables or {}},headers=headers or {})
+            tokens={}
+            def headers_for(self, member_id):
+                return {'Authorization': 'Bearer ' + self.tokens[str(member_id)]}
+
+            def login_member(self, member_id, password):
+                from app.models import CompanyUser
+                with app.state.sessions() as db:
+                    email = db.get(CompanyUser, int(member_id)).user.email
+                result = client.post('/graphql', json={'query':
+                    'mutation($i:LoginInput!){login(input:$i){token}}',
+                    'variables': {'i': {'email': email, 'password': password}}}).json()
+                assert 'errors' not in result, result
+                self.tokens[str(member_id)] = result['data']['login']['token']
+
+            def request(self, query, variables=None, headers=None, code=None):
+                # actor solo es una comodidad del fixture: nunca se envía a GraphQL.
+                variables = dict(variables or {})
+                actor = variables.pop('actor', None)
+                if headers is None and actor is not None:
+                    headers = self.headers_for(actor)
+                response = client.post('/graphql', json={'query':query,'variables':variables}, headers=headers or {})
                 result=response.json()
                 records.append({'caso':request.node.name,'operacion':query,'variables':redact(variables or {}),
                                 'esperado':code or 'Sin errores GraphQL','obtenido':redact(result),'http':response.status_code})
+                return response
+
+            def call(self,query,variables=None,headers=None,code=None):
+                response = self.request(query, variables, headers, code)
+                result = response.json()
                 assert response.status_code==200,result
                 if code=='GRAPHQL_VALIDATION':
                     assert result.get('errors'),result
@@ -54,6 +78,9 @@ def api(tmp_path,request):
                     assert result['errors'][0]['extensions']['code']==code,result
                 else:
                     assert 'errors' not in result,result
+                for field in ('createCompanyAdmin', 'createCompanyUser'):
+                    if result.get('data') and result['data'].get(field):
+                        self.login_member(result['data'][field]['id'], variables['input']['password'])
                 return result.get('data')
         obj=API()
         obj.app,obj.settings,obj.client=app,settings,client
@@ -73,7 +100,7 @@ def pytest_runtest_logreport(report):
 
 
 def pytest_sessionfinish(session,exitstatus):
-    directory=Path('docs/evidencias/unidad2')
+    directory=Path(os.getenv('EVIDENCE_DIR', 'entrega/evidencias-actividad6'))
     directory.mkdir(parents=True,exist_ok=True)
     backend='mysql' if os.getenv('TEST_MYSQL')=='1' else 'sqlite'
     (directory/f'graphql-{backend}.json').write_text(json.dumps({'backend':backend,'exitstatus':exitstatus,'pruebas':reports,

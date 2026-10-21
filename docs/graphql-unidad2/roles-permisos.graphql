@@ -1,12 +1,12 @@
-query ($actor: ID!) {
-  roles(actorCompanyUserId: $actor) {
+query  {
+  roles {
     id
     code
     name
     description
     isActive
   }
-  permissions(actorCompanyUserId: $actor) {
+  permissions {
     id
     code
     name

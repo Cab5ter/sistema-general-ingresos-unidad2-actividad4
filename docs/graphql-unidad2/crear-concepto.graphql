@@ -1,5 +1,5 @@
-mutation ($actor: ID!, $input: CreateConceptInput!) {
-  createConcept(actorCompanyUserId: $actor, input: $input) {
+mutation ($input: CreateConceptInput!) {
+  createConcept(input: $input) {
     id
     companyId
     name

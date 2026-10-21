@@ -1,5 +1,5 @@
-mutation ($actor: ID!, $input: CreateTransactionInput!) {
-  createTransaction(actorCompanyUserId: $actor, input: $input) {
+mutation ($input: CreateTransactionInput!) {
+  createTransaction(input: $input) {
     id
     amount
     transactionType

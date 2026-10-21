@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 from app.access import Role, Permission, RolePermission
 from test_access import data, make_company
 
-PREVIEW = """query Revisar($actor: ID!, $input: SetRolePermissionsInput!) {
- previewRolePermissions(actorCompanyUserId:$actor,input:$input) {
+PREVIEW = """query Revisar($input: SetRolePermissionsInput!) {
+ previewRolePermissions(input:$input) {
  role {code} current {code} toActivate {code} toDeactivate {code} unchanged {code} finalCount }}"""
-APPLY = """mutation Aplicar($actor: ID!, $input: SetRolePermissionsInput!) {
- setRolePermissions(actorCompanyUserId:$actor,input:$input) {
+APPLY = """mutation Aplicar($input: SetRolePermissionsInput!) {
+ setRolePermissions(input:$input) {
  role {code} activated {code} deactivated {code} unchanged {code} finalCount changed }}"""
 
 def variables(data, codes=None):
@@ -57,7 +57,7 @@ def test_invalid_proposals_no_writes(api,data,operation,variant):
         ident=v['input']['roleId'] if model is Role else v['input']['permissionIds'][0]
         with api.app.state.sessions.begin() as db: db.get(model,int(ident)).is_active=False
     before=snapshot(api)
-    result=api.client.post('/graphql',json={'query':operation,'variables':v}).json()
+    result=api.request(operation,v).json()
     field='previewRolePermissions' if operation==PREVIEW else 'setRolePermissions'
     assert result['errors'] and result['data'][field] is None
     assert snapshot(api)==before
@@ -76,7 +76,7 @@ def test_e07_rollback_after_flush(api,data,monkeypatch):
         observed.append(True)
         raise RuntimeError('Fallo controlado después de flush y antes de commit (E07)')
     monkeypatch.setattr(FinanceService,'check_before_commit',fail_after_flush)
-    result=api.client.post('/graphql',json={'query':APPLY,'variables':v}).json()
+    result=api.request(APPLY,v).json()
     assert result['errors'] and result['data']['setRolePermissions'] is None and observed
     after = snapshot(api)  # Una sesión nueva, independiente de la que falló.
     print('E07 ANTES:', json.dumps(before))
@@ -94,24 +94,24 @@ def test_empty_survives_new_application(api,data):
     restarted=create_app(api.settings)
     try:
         with TestClient(restarted) as client:
-            result=client.post('/graphql',json={'query':PREVIEW,'variables':v}).json()
+            result=client.post('/graphql',json={'query':PREVIEW,'variables':{'input':v['input']}}, headers=api.headers_for(v['actor'])).json()
             assert result['data']['previewRolePermissions']['current']==[]
         assert snapshot(api)==before
     finally: restarted.state.engine.dispose()
 
 
 def test_catalog_enum_filter_inactive_and_authorization(api,data):
-    query="""query Catalogo($a:ID!,$r:PermissionResource){
-      permissionCatalog(actorCompanyUserId:$a,resource:$r){code}}"""
+    query="""query Catalogo($r:PermissionResource){
+      permissionCatalog(resource:$r){code}}"""
     for resource,prefix in [('COMPANY_USERS','company.users.'),('ACCOUNTS','accounts.'),('CONCEPTS','concepts.'),('TRANSACTIONS','transactions.'),('ROLES','roles.')]:
-        rows=api.call(query,{'a':data['admin'],'r':resource})['permissionCatalog']
+        rows=api.call(query,{'actor':data['admin'],'r':resource})['permissionCatalog']
         assert len(rows)==2 and all(p['code'].startswith(prefix) for p in rows)
         assert rows==sorted(rows,key=lambda p:p['code'])
-    for v in ({'a':data['admin']},{'a':data['admin'],'r':None}):
+    for v in ({'actor':data['admin']},{'actor':data['admin'],'r':None}):
         assert len(api.call(query,v)['permissionCatalog'])==10
-    api.call(query,{'a':data['admin'],'r':'PAYMENTS'},code='GRAPHQL_VALIDATION')
+    api.call(query,{'actor':data['admin'],'r':'PAYMENTS'},code='GRAPHQL_VALIDATION')
     with api.app.state.sessions.begin() as db: db.get(Permission,int(data['permissions']['accounts.write'])).is_active=False
-    assert len(api.call(query,{'a':data['admin']})['permissionCatalog'])==9
+    assert len(api.call(query,{'actor':data['admin']})['permissionCatalog'])==9
     v=variables(data); v['actor']=data['members']['CAPTURISTA']
     api.call(PREVIEW,v,code='FORBIDDEN'); api.call(APPLY,v,code='FORBIDDEN')
     v['actor']=data['members']['CONTADOR']

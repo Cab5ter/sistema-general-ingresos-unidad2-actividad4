@@ -129,13 +129,13 @@ def convert(kind, obj):
     return kind(**values)
 
 
-def execute(info, work, actor_company_user_id=None, permission=None):
+def execute(info, work, permission=None):
     app = info.context['request'].app
     try:
         with app.state.sessions.begin() as session:
             from .db import lock_operation
             lock_operation(session)
-            service = Service(session, app.state.settings, info.context['request'].headers, actor_company_user_id)
+            service = Service(session, app.state.settings, info.context['request'].headers)
             if permission:
                 service.require(permission)
             result = work(service)
@@ -164,8 +164,8 @@ class Query(FinanceQuery, AccessQuery):
         return execute(info, lambda svc: convert(Company, svc.get_company(id)))
 
     @strawberry.field
-    def company_users(self, info: Info, actor_company_user_id: strawberry.ID, company_id: strawberry.ID) -> list[CompanyUser]:
-        return execute(info, lambda svc: [convert(CompanyUser, x) for x in svc.members(company_id)], actor_company_user_id, 'company.users.read')
+    def company_users(self, info: Info, company_id: strawberry.ID) -> list[CompanyUser]:
+        return execute(info, lambda svc: [convert(CompanyUser, x) for x in svc.members(company_id)], 'company.users.read')
 
 
 @strawberry.type
@@ -191,12 +191,12 @@ class Mutation(FinanceMutation, AccessMutation):
         return execute(info, lambda svc: convert(CompanyUser, svc.create_member(asdict(input), True)))
 
     @strawberry.mutation
-    def create_company_user(self, info: Info, actor_company_user_id: strawberry.ID, input: CreateCompanyUserInput) -> CompanyUser:
-        return execute(info, lambda svc: convert(CompanyUser, svc.create_member(asdict(input), False)), actor_company_user_id, 'company.users.write')
+    def create_company_user(self, info: Info, input: CreateCompanyUserInput) -> CompanyUser:
+        return execute(info, lambda svc: convert(CompanyUser, svc.create_member(asdict(input), False)), 'company.users.write')
 
     @strawberry.mutation
-    def deactivate_company_user(self, info: Info, actor_company_user_id: strawberry.ID, id: strawberry.ID) -> CompanyUser:
-        return execute(info, lambda svc: convert(CompanyUser, svc.deactivate_member(id)), actor_company_user_id, 'company.users.write')
+    def deactivate_company_user(self, info: Info, id: strawberry.ID) -> CompanyUser:
+        return execute(info, lambda svc: convert(CompanyUser, svc.deactivate_member(id)), 'company.users.write')
 
     @strawberry.mutation
     def login(self, info: Info, input: LoginInput) -> AuthPayload:

@@ -39,15 +39,14 @@ def email(value):
 
 
 class Service:
-    def __init__(self, session, settings, headers, actor_company_user_id=None):
+    def __init__(self, session, settings, headers):
         self.db, self.settings, self.headers = session, settings, headers
-        self.actor_company_user_id = actor_company_user_id
+        self.actor_company_user_id = None
         self.required_permissions = set()
 
     def require(self, code):
         from .access import exigir_permiso
-        if self.actor_company_user_id is None:
-            fail('Se requiere actorCompanyUserId.', 'FORBIDDEN')
+        self.leer_actor()
         exigir_permiso(self.db, self.actor_company_user_id, code)
         self.required_permissions.add(code)
 
@@ -61,24 +60,14 @@ class Service:
         if not hmac.compare_digest(supplied.encode(), self.settings.bootstrap_key.encode()):
             fail('Se requiere la clave de inicialización.', 'FORBIDDEN')
 
+    def leer_actor(self):
+        from .auth import leer_actor
+        member = leer_actor(self.db, self.settings, self.headers)
+        self.actor_company_user_id = member.id
+        return member
+
     def actor(self):
-        if self.actor_company_user_id is not None:
-            from .access import membership
-            return membership(self.db, self.actor_company_user_id).user
-        auth = self.headers.get('authorization', '')
-        try:
-            scheme, token = auth.split(' ', 1)
-            if scheme.lower() != 'bearer':
-                raise ValueError
-            data = jwt.decode(token, self.settings.jwt_secret, algorithms=['HS256'],
-                              issuer='empresa-api', audience='empresa-api',
-                              options={'require': ['exp', 'iat', 'sub', 'iss', 'aud']})
-            user = self.db.get(m.User, int(data['sub']))
-        except (jwt.PyJWTError, ValueError, KeyError, TypeError):
-            fail('Token ausente, inválido o expirado.', 'UNAUTHENTICATED')
-        if not user or not user.is_active:
-            fail('Usuario inactivo o inexistente.', 'UNAUTHENTICATED')
-        return user
+        return self.leer_actor().user
 
     def admin(self, company_id):
         from .access import membership
@@ -191,14 +180,16 @@ class Service:
             hasher.verify(user.password_hash, fields['password'])
         except (VerificationError, InvalidHashError):
             fail('Credenciales incorrectas.', 'UNAUTHENTICATED')
-        active = self.db.scalar(select(m.CompanyUser.id).join(m.Company).where(
+        active = list(self.db.scalars(select(m.CompanyUser).join(m.Company).where(
             m.CompanyUser.user_id == user.id, m.CompanyUser.is_active.is_(True),
-            m.Company.is_active.is_(True)))
-        if active is None:
+            m.Company.is_active.is_(True)).order_by(m.CompanyUser.id)))
+        if not active:
             fail('No tienes membresías activas en empresas activas.', 'FORBIDDEN')
+        if len(active) != 1:
+            fail('El correo debe identificar una única membresía activa.', 'FORBIDDEN')
+        member = active[0]
         instant = m.now()
-        token = jwt.encode({'sub': str(user.id), 'iat': instant,
-                            'exp': instant + timedelta(minutes=self.settings.jwt_expire_minutes),
-                            'iss': 'empresa-api', 'aud': 'empresa-api'},
+        token = jwt.encode({'companyUserId': member.id, 'companyId': member.company_id,
+                            'exp': instant + timedelta(minutes=30)},
                            self.settings.jwt_secret, algorithm='HS256')
         return token, user

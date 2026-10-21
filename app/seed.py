@@ -41,7 +41,7 @@ def seed(settings, password):
                                    'email':DEMO_EMAIL,'password':password}, True)
             token, user = svc.login({'email':DEMO_EMAIL,'password':password})
             svc.headers = {'authorization':'Bearer '+token}
-            svc.actor_company_user_id = db.scalar(select(m.CompanyUser.id).where(m.CompanyUser.user_id == user.id, m.CompanyUser.company_id == company.id))
+            svc.leer_actor()
             accounts = []
             for label, kind in [('Caja de demostración','CASH'), ('Banco de demostración','DEBIT'), ('Ahorro de demostración','SAVINGS')]:
                 obj = db.scalar(select(m.Account).where(m.Account.company_id==company.id, m.Account.name_key==label.casefold()))

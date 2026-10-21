@@ -15,8 +15,8 @@ class Settings:
             raise ValueError('JWT_SECRET y BOOTSTRAP_KEY requieren al menos 32 caracteres.')
         if self.jwt_secret == self.bootstrap_key:
             raise ValueError('Las claves deben ser independientes.')
-        if self.jwt_expire_minutes <= 0:
-            raise ValueError('JWT_EXPIRE_MINUTES debe ser positivo.')
+        if self.jwt_expire_minutes != 30:
+            raise ValueError('JWT_EXPIRE_MINUTES debe ser 30 para esta actividad.')
 
     @classmethod
     def from_env(cls):
