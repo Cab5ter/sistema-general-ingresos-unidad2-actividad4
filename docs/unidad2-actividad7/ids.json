@@ -1,0 +1,19 @@
+{
+  "companyId": "1",
+  "adminMemberId": "1",
+  "otherCompanyId": "2",
+  "otherMemberId": "2",
+  "emptyCompanyId": "3",
+  "emptyMemberId": "3",
+  "consultaMemberId": "4",
+  "accounts": {
+    "Banco": "1",
+    "Caja": "2",
+    "Ahorro": "3"
+  },
+  "concepts": {
+    "INCOME": "1",
+    "EXPENSE": "2"
+  },
+  "otherAccountId": "4"
+}

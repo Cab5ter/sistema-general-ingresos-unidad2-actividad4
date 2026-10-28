@@ -1,7 +1,7 @@
 """Tablas de la actividad 4; las anteriores se conservan sin migraciones destructivas."""
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint, Numeric, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 from .db import Base, Timestamp
@@ -73,11 +73,12 @@ class AccountConcept(Base):
 
 class Transaction(Base):
     __tablename__ = 'transactions'
+    __table_args__ = (Index('ix_transactions_account_active_date', 'account_id', 'is_active', 'transaction_date'),)
     id: Mapped[int] = mapped_column(primary_key=True)
     account_id: Mapped[int] = mapped_column(ForeignKey('accounts.id'))
     concept_id: Mapped[int] = mapped_column(ForeignKey('concepts.id'))
     transaction_type: Mapped[str] = mapped_column(String(20))
-    amount: Mapped[Decimal] = mapped_column(ExactDecimal())
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2).with_variant(ExactDecimal(), 'sqlite'))
     transaction_date: Mapped[datetime] = mapped_column(Timestamp)
     captured_at: Mapped[datetime] = mapped_column(Timestamp, default=now)
     captured_by: Mapped[int] = mapped_column(ForeignKey('users.id'))

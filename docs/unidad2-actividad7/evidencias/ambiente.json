@@ -1,0 +1,15 @@
+{
+  "generatedAtUTC": "2026-10-28T23:25:16.025391+00:00",
+  "python": "3.12.14",
+  "mysql": "8.4.13",
+  "packages": {
+    "SQLAlchemy": "2.0.40",
+    "strawberry-graphql": "0.270.0",
+    "fastapi": "0.115.12",
+    "PyMySQL": "1.1.2",
+    "pytest": "8.3.5"
+  },
+  "tests": 109,
+  "failures": 0,
+  "errors": 0
+}

@@ -10,6 +10,8 @@ def create_app(settings: Settings):
     app = FastAPI(title='Sistema General de Ingresos: roles y permisos', debug=False)
     engine, sessions = database(settings.database_url)
     initialize(engine, sessions)
+    from .migrate_activity7 import verify_storage
+    verify_storage(engine)
     app.state.engine, app.state.sessions, app.state.settings = engine, sessions, settings
     app.include_router(GraphQLRouter(schema, graphql_ide='graphiql'), prefix='/graphql')
     return app

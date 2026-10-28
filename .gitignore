@@ -22,4 +22,5 @@ env/
 .roles-demo.json
 .activity4-credentials.json
 .activity6-other-credentials.json
+.activity7-credentials.json
 !.env.docker.example

@@ -1,11 +1,13 @@
 """Contrato GraphQL financiero de las páginas 3–7 del PDF."""
 from decimal import Decimal, InvalidOperation
+from datetime import datetime
+from typing import NewType
 from enum import Enum
 import re
 import strawberry
 from strawberry.types import Info
 from . import models as m
-from .schema import Time, Company, User, convert, execute
+from .schema import Time, Company, User, convert, execute, serialize_time, parse_time
 
 
 def parse_decimal(value):
@@ -24,7 +26,9 @@ def parse_decimal(value):
         raise ValueError('Decimal inválido.') from None
 
 
-Money = strawberry.scalar(Decimal, name='Decimal', serialize=lambda x: format(x, 'f'), parse_value=parse_decimal)
+Money = strawberry.scalar(Decimal, name='Decimal', serialize=lambda x: format(x, '.2f'), parse_value=parse_decimal)
+OperationDateTime = strawberry.scalar(NewType('OperationDateTime', datetime), name='DateTime',
+                                      serialize=serialize_time, parse_value=parse_time)
 
 
 @strawberry.enum
@@ -99,8 +103,8 @@ class Transaction:
     concept_id: strawberry.ID
     transaction_type: TransactionType
     amount: Decimal
-    transaction_date: Time
-    captured_at: Time
+    transaction_date: OperationDateTime
+    captured_at: OperationDateTime
     captured_by: strawberry.ID
     short_description: str | None
     long_description: str | None
@@ -146,7 +150,7 @@ class CreateTransactionInput:
     concept_id: strawberry.ID
     transaction_type: TransactionType
     amount: Decimal
-    transaction_date: Time | None = strawberry.UNSET
+    transaction_date: OperationDateTime | None = strawberry.UNSET
     short_description: str | None = strawberry.UNSET
     long_description: str | None = strawberry.UNSET
 
@@ -203,11 +207,6 @@ class FinanceQuery:
                      limit: int | None = strawberry.UNSET, offset: int | None = strawberry.UNSET) -> list[Transaction]:
         return execute(info, lambda s: [financial(Transaction, x) for x in s.transactions(
             plain(account_id), plain(transaction_type), plain(limit), plain(offset))], 'transactions.read')
-
-    @strawberry.field(description='Extensión: ingresos activos menos egresos activos, sin paginación.')
-    def account_balance(self, info: Info, account_id: strawberry.ID) -> Decimal:
-        return execute(info, lambda s: s.balance(account_id), 'transactions.read')
-
 
 @strawberry.type
 class FinanceMutation:

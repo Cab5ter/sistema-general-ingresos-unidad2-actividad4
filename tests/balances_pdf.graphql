@@ -1,0 +1,18 @@
+# Contrato independiente transcrito de la actividad 7, página 5.
+scalar Date
+scalar DateTime
+type AccountBalance {
+ accountId: ID! accountName: String! isActive: Boolean!
+ openingBalance: Decimal! totalIncome: Decimal! totalExpense: Decimal!
+ profit: Decimal! closingBalance: Decimal! isInRed: Boolean!
+}
+type GeneralBalance {
+ companyId: ID! currency: String! fromDate: Date! toDate: Date!
+ openingBalance: Decimal! totalIncome: Decimal! totalExpense: Decimal!
+ profit: Decimal! closingBalance: Decimal! isInRed: Boolean! accountsInRed: Int!
+ accounts: [AccountBalance!]!
+}
+extend type Query {
+ accountBalance(accountId: ID!, fromDate: Date!, toDate: Date!): AccountBalance!
+ generalBalance(fromDate: Date!, toDate: Date!): GeneralBalance!
+}

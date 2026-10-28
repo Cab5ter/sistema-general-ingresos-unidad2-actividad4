@@ -62,15 +62,15 @@ def test_relationship_lifecycle_and_permissions(api,data):
 
 def test_precision_pagination_dates_soft_delete_and_balance(api,data):
     actor=data['members']['CAPTURISTA']; aid=data['account']
-    values=[('0.1','INCOME'),('0.2','INCOME'),('0.3','EXPENSE'),('123456789012345678901234567890.12345678901234567890','INCOME')]
+    values=[('0.10','INCOME'),('0.20','INCOME'),('0.30','EXPENSE'),('9999999999.99','INCOME')]
     ids=[]
     for amount,kind in values:
         row=api.call(TX,{'actor':actor,'input':tx_input(data,amount,kind)})['createTransaction']
         assert row['amount']==amount and row['transactionDate']==row['capturedAt']
         ids.append(row['id'])
-    assert api.call(BALANCE,{'actor':actor,'a':aid})['accountBalance']==values[-1][0]
+    assert api.call(BALANCE,{'actor':actor,'a':aid})['accountBalance']['closingBalance']==values[-1][0]
     with api.app.state.sessions() as db:
-        assert list(db.scalars(text('SELECT amount FROM transactions ORDER BY id')))==[x[0] for x in values]
+        assert [Decimal(x) for x in db.scalars(text('SELECT amount FROM transactions ORDER BY id'))]==[Decimal(x[0]) for x in values]
     rows=api.call(TXS,{'actor':actor,'a':aid,'limit':2,'offset':1})['transactions']
     assert [x['id'] for x in rows]==ids[1:3]
     assert len(api.call(TXS,{'actor':actor,'type':'EXPENSE'})['transactions'])==1
@@ -79,12 +79,12 @@ def test_precision_pagination_dates_soft_delete_and_balance(api,data):
     api.call(DELETE,{'actor':data['members']['CONSULTA'],'id':ids[-1]},code='FORBIDDEN')
     assert not api.call(DELETE,{'actor':actor,'id':ids[-1]})['deleteTransaction']['isActive']
     api.call(DELETE,{'actor':actor,'id':ids[-1]})
-    assert Decimal(api.call(BALANCE,{'actor':actor,'a':aid})['accountBalance'])==0
+    assert Decimal(api.call(BALANCE,{'actor':actor,'a':aid})['accountBalance']['closingBalance'])==0
     assert count(api,m.Transaction)==4
     assert len(api.call(TXS,{'actor':actor})['transactions'])==3
     row=api.call(TX,{'actor':actor,'input':tx_input(data,'2','EXPENSE',transactionDate='2026-10-10T10:00:00-06:00')})['createTransaction']
     assert row['transactionDate']=='2026-10-10T16:00:00Z'
-    assert Decimal(api.call(BALANCE,{'actor':actor,'a':aid})['accountBalance'])==-2
+    assert Decimal(api.call(BALANCE,{'actor':actor,'a':aid})['accountBalance']['closingBalance'])==-2
 
 
 def test_other_company_concept_is_rejected(api,data):

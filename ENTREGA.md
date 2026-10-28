@@ -1,15 +1,16 @@
-# Unidad II · Actividad 6: Control de acceso según el rol
+# Unidad II · Actividad 7: Gestión de balances
 
 Continuación del Sistema General de Ingresos. Entrega en equipo.
 
-**Integrantes del equipo:** Enrique Zavala y Marcelo Medina.
+**Integrantes del equipo:** Enrique Zavala, Marcelo Medina y Dylan Vazquez Soriano.
 
-Incluye login con JWT HS256 de 30 minutos, lectura central de la membresía desde Bearer, comprobación de permisos en cada petición, aislamiento entre empresas y pruebas de los nueve casos. Conserva la configuración de permisos de las actividades 4 y 5.
+Incluye el proyecto actualizado, consultas de balance por período, fechas de operación UTC, montos exactos, migración validada, laboratorio reproducible, B01-B15 automatizados y evidencia MySQL. Conserva el JWT y los permisos de la actividad 6.
 
-- Instrucciones: docs/unidad2-actividad6/README.md
-- Evidencias nuevas: carpeta local externa indicada por EVIDENCE_DIR; no se versionan.
+- Instrucciones: docs/unidad2-actividad7/README.md
+- Evidencias nuevas: docs/unidad2-actividad7/evidencias.md y carpeta evidencias.
+- ZIP: `python scripts/package_activity7.py` genera `entrega/unidad2_actividad7_equipo.zip`.
 - GitHub: https://github.com/Cab5ter/sistema-general-ingresos-unidad2-actividad4
 
-El repositorio contiene código, contratos, pruebas y guías reproducibles. No contiene los secretos locales, tokens vigentes ni las capturas nuevas de la actividad 6.
+El repositorio contiene código, contratos, operaciones, variables, pruebas, resultados y guías reproducibles. Los secretos locales y tokens vigentes se excluyen de esta entrega. Los archivos de actividades anteriores se conservan como historial.
 
 El envío del ZIP y enlace a Teams corresponde al estudiante.

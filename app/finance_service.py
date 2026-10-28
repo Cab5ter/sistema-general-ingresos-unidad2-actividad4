@@ -100,8 +100,11 @@ class FinanceService(Service):
         amount = fields['amount']
         if not isinstance(amount, Decimal) or not amount.is_finite() or amount <= 0:
             fail('El monto debe ser un decimal finito estrictamente mayor que cero.')
-        if len(amount.as_tuple().digits) > 100 or abs(amount.as_tuple().exponent) > 100:
-            fail('El monto excede 100 dígitos o 100 posiciones decimales.')
+        if amount > Decimal('9999999999.99'):
+            fail('El monto excede Numeric(12, 2).')
+        if amount != amount.quantize(Decimal('0.01')):
+            fail('El monto admite como máximo dos decimales; no se redondea.')
+        fields['amount'] = amount.quantize(Decimal('0.01'))
         if not account.is_active or not concept.is_active:
             fail('La cuenta y el concepto deben estar activos.')
         link = self.relation(account.id, concept.id)
@@ -113,6 +116,12 @@ class FinanceService(Service):
         date = fields.pop('transaction_date', None) or instant
         if date.tzinfo is None:
             fail('transactionDate requiere zona horaria.')
+        try:
+            date = date.astimezone(timezone.utc)
+            if date.year < 1000:
+                raise ValueError
+        except (ValueError, OverflowError):
+            fail('transactionDate está fuera del rango MySQL.')
         obj = m.Transaction(**{**fields, 'account_id': account.id, 'concept_id': concept.id},
                             transaction_date=date.astimezone(timezone.utc), captured_at=instant,
                             captured_by=actor.id)

@@ -1,0 +1,158 @@
+[
+  {
+    "caso": "banco",
+    "operationName": "BalanceDeUnaCuenta",
+    "variables": {
+      "accountId": "1",
+      "from": "2026-10-26",
+      "to": "2026-10-30"
+    },
+    "response": {
+      "data": {
+        "accountBalance": {
+          "accountId": "1",
+          "accountName": "Banco",
+          "isActive": true,
+          "openingBalance": "1000.00",
+          "totalIncome": "3000.00",
+          "totalExpense": "2200.00",
+          "profit": "800.00",
+          "closingBalance": "1800.00",
+          "isInRed": false
+        }
+      }
+    }
+  },
+  {
+    "caso": "caja",
+    "operationName": "BalanceDeUnaCuenta",
+    "variables": {
+      "accountId": "2",
+      "from": "2026-10-26",
+      "to": "2026-10-30"
+    },
+    "response": {
+      "data": {
+        "accountBalance": {
+          "accountId": "2",
+          "accountName": "Caja",
+          "isActive": true,
+          "openingBalance": "0.00",
+          "totalIncome": "500.00",
+          "totalExpense": "700.00",
+          "profit": "-200.00",
+          "closingBalance": "-200.00",
+          "isInRed": true
+        }
+      }
+    }
+  },
+  {
+    "caso": "ahorro",
+    "operationName": "BalanceDeUnaCuenta",
+    "variables": {
+      "accountId": "3",
+      "from": "2026-10-26",
+      "to": "2026-10-30"
+    },
+    "response": {
+      "data": {
+        "accountBalance": {
+          "accountId": "3",
+          "accountName": "Ahorro",
+          "isActive": true,
+          "openingBalance": "0.00",
+          "totalIncome": "0.00",
+          "totalExpense": "0.00",
+          "profit": "0.00",
+          "closingBalance": "0.00",
+          "isInRed": false
+        }
+      }
+    }
+  },
+  {
+    "caso": "general",
+    "operationName": "BalanceDeLaEmpresa",
+    "variables": {
+      "from": "2026-10-26",
+      "to": "2026-10-30"
+    },
+    "response": {
+      "data": {
+        "generalBalance": {
+          "companyId": "1",
+          "currency": "MXN",
+          "fromDate": "2026-10-26",
+          "toDate": "2026-10-30",
+          "openingBalance": "1000.00",
+          "totalIncome": "3500.00",
+          "totalExpense": "2900.00",
+          "profit": "600.00",
+          "closingBalance": "1600.00",
+          "isInRed": false,
+          "accountsInRed": 1,
+          "accounts": [
+            {
+              "accountId": "1",
+              "accountName": "Banco",
+              "isActive": true,
+              "openingBalance": "1000.00",
+              "totalIncome": "3000.00",
+              "totalExpense": "2200.00",
+              "profit": "800.00",
+              "closingBalance": "1800.00",
+              "isInRed": false
+            },
+            {
+              "accountId": "2",
+              "accountName": "Caja",
+              "isActive": true,
+              "openingBalance": "0.00",
+              "totalIncome": "500.00",
+              "totalExpense": "700.00",
+              "profit": "-200.00",
+              "closingBalance": "-200.00",
+              "isInRed": true
+            },
+            {
+              "accountId": "3",
+              "accountName": "Ahorro",
+              "isActive": true,
+              "openingBalance": "0.00",
+              "totalIncome": "0.00",
+              "totalExpense": "0.00",
+              "profit": "0.00",
+              "closingBalance": "0.00",
+              "isInRed": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "caso": "banco-dia28",
+    "operationName": "BalanceDeUnaCuenta",
+    "variables": {
+      "accountId": "1",
+      "from": "2026-10-28",
+      "to": "2026-10-28"
+    },
+    "response": {
+      "data": {
+        "accountBalance": {
+          "accountId": "1",
+          "accountName": "Banco",
+          "isActive": true,
+          "openingBalance": "2800.00",
+          "totalIncome": "0.00",
+          "totalExpense": "1000.00",
+          "profit": "-1000.00",
+          "closingBalance": "1800.00",
+          "isInRed": false
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,29 @@
+# Elegir la operación en GraphiQL y pegar su JSON de variables.
+# Encabezados: {"Authorization":"Bearer TOKEN_OBTENIDO_EN_LOGIN"}
+mutation IniciarSesion($input: LoginInput!) {
+  login(input: $input) { token tokenType user { id name email } }
+}
+
+query BalanceDeUnaCuenta($accountId: ID!, $from: Date!, $to: Date!) {
+  accountBalance(accountId: $accountId, fromDate: $from, toDate: $to) {
+    accountId accountName isActive
+    openingBalance totalIncome totalExpense profit closingBalance isInRed
+  }
+}
+
+query BalanceDeLaEmpresa($from: Date!, $to: Date!) {
+  generalBalance(fromDate: $from, toDate: $to) {
+    companyId currency fromDate toDate
+    openingBalance totalIncome totalExpense profit closingBalance isInRed accountsInRed
+    accounts {
+      accountId accountName isActive
+      openingBalance totalIncome totalExpense profit closingBalance isInRed
+    }
+  }
+}
+
+mutation CapturarMovimiento($input: CreateTransactionInput!) {
+  createTransaction(input: $input) {
+    id accountId transactionType amount transactionDate capturedAt isActive
+  }
+}

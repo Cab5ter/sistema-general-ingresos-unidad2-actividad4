@@ -156,7 +156,8 @@ def test_cross_company_resources_and_memberships(api,data):
         (LINK,{'input':{'accountId':data['account'],'conceptId':data['concepts']['INCOME']}}),
         (ASSIGN_ROLE,{'input':{'companyUserId':data['members']['CAPTURISTA'],'roleId':data['roles']['CONTADOR']}}),
     ]:
-        api.call(query,{'actor':other['id'],**variables},code='FORBIDDEN')
+        # Actividad 7: una cuenta ajena no se distingue de una inexistente.
+        api.call(query,{'actor':other['id'],**variables},code='NOT_FOUND' if query == BALANCE else 'FORBIDDEN')
     assert api.call(TXS,{'actor':other['id']})['transactions']==[]
     # Los catálogos de roles sí son globales.
     assert len(api.call(ROLES,{'actor':other['id']})['roles'])==4

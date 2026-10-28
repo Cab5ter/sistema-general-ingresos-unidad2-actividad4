@@ -151,10 +151,11 @@ def execute(info, work, permission=None):
 
 from .finance_schema import FinanceQuery, FinanceMutation, Money
 from .access_schema import AccessQuery, AccessMutation
+from .balance_schema import BalanceQuery
 
 
 @strawberry.type
-class Query(FinanceQuery, AccessQuery):
+class Query(FinanceQuery, AccessQuery, BalanceQuery):
     @strawberry.field
     def companies(self, info: Info, active_only: Optional[bool] = strawberry.UNSET) -> list[Company]:
         return execute(info, lambda svc: [convert(Company, x) for x in svc.companies(active_only)])

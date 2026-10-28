@@ -26,12 +26,12 @@ type AccountConcept {
 input AssignConceptToAccountInput { accountId: ID! conceptId: ID! }
 type Transaction {
  id: ID! accountId: ID! conceptId: ID! transactionType: TransactionType! amount: Decimal!
- transactionDate: Time! capturedAt: Time! capturedBy: ID! shortDescription: String longDescription: String
+ transactionDate: DateTime! capturedAt: DateTime! capturedBy: ID! shortDescription: String longDescription: String
  isActive: Boolean! createdAt: Time! updatedAt: Time! account: Account! concept: Concept! capturedByUser: User!
 }
 input CreateTransactionInput {
  accountId: ID! conceptId: ID! transactionType: TransactionType! amount: Decimal!
- transactionDate: Time shortDescription: String longDescription: String
+ transactionDate: DateTime shortDescription: String longDescription: String
 }
 extend type Query {
  accounts(companyId: ID!, accountType: AccountType, activeOnly: Boolean): [Account!]!

@@ -15,6 +15,18 @@ type Account {
   company: Company!
 }
 
+type AccountBalance {
+  accountId: ID!
+  accountName: String!
+  isActive: Boolean!
+  openingBalance: Decimal!
+  totalIncome: Decimal!
+  totalExpense: Decimal!
+  profit: Decimal!
+  closingBalance: Decimal!
+  isInRed: Boolean!
+}
+
 type AccountConcept {
   id: ID!
   accountId: ID!
@@ -168,12 +180,32 @@ input CreateTransactionInput {
   conceptId: ID!
   transactionType: TransactionType!
   amount: Decimal!
-  transactionDate: Time
+  transactionDate: DateTime
   shortDescription: String
   longDescription: String
 }
 
+"""Date (isoformat)"""
+scalar Date
+
+scalar DateTime
+
 scalar Decimal
+
+type GeneralBalance {
+  companyId: ID!
+  currency: String!
+  fromDate: Date!
+  toDate: Date!
+  openingBalance: Decimal!
+  totalIncome: Decimal!
+  totalExpense: Decimal!
+  profit: Decimal!
+  closingBalance: Decimal!
+  isInRed: Boolean!
+  accountsInRed: Int!
+  accounts: [AccountBalance!]!
+}
 
 input LoginInput {
   email: String!
@@ -224,15 +256,14 @@ type Query {
   concepts(companyId: ID!, conceptType: ConceptType, activeOnly: Boolean): [Concept!]!
   accountConcepts(accountId: ID!): [AccountConcept!]!
   transactions(accountId: ID, transactionType: TransactionType, limit: Int, offset: Int): [Transaction!]!
-
-  """Extensión: ingresos activos menos egresos activos, sin paginación."""
-  accountBalance(accountId: ID!): Decimal!
   permissionCatalog(resource: PermissionResource): [Permission!]!
   previewRolePermissions(input: SetRolePermissionsInput!): RolePermissionPlan
   roles(activeOnly: Boolean): [Role!]!
   role(id: ID!): Role
   permissions(activeOnly: Boolean): [Permission!]!
   rolePermissions(roleId: ID!): [RolePermission!]!
+  accountBalance(accountId: ID!, fromDate: Date!, toDate: Date!): AccountBalance!
+  generalBalance(fromDate: Date!, toDate: Date!): GeneralBalance!
   companies(activeOnly: Boolean): [Company!]!
   company(id: ID!): Company
   companyUsers(companyId: ID!): [CompanyUser!]!
@@ -284,8 +315,8 @@ type Transaction {
   conceptId: ID!
   transactionType: TransactionType!
   amount: Decimal!
-  transactionDate: Time!
-  capturedAt: Time!
+  transactionDate: DateTime!
+  capturedAt: DateTime!
   capturedBy: ID!
   shortDescription: String
   longDescription: String

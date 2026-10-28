@@ -18,6 +18,20 @@ def database(url):
     def configure(connection, _):
         if sqlite:
             connection.execute('PRAGMA foreign_keys=ON')
+            # El fallback de pruebas conserva precisión: SUM nativo de SQLite
+            # convertiría el TEXT monetario a float. MySQL usa SUM de DECIMAL.
+            from decimal import Decimal, localcontext
+            class DecimalSum:
+                def __init__(self):
+                    self.total = Decimal('0.00')
+                def step(self, value):
+                    if value is not None:
+                        with localcontext() as ctx:
+                            ctx.prec = 65
+                            self.total += Decimal(value)
+                def finalize(self):
+                    return str(self.total)
+            connection.create_aggregate('decimal_sum', 1, DecimalSum)
 
     return engine, sessionmaker(engine, expire_on_commit=False)
 
