@@ -2,7 +2,7 @@
 
 Balances por cuenta y balance general por período, profit y números rojos. Continúa el proyecto de la actividad 6 y conserva su JWT, cuatro roles, diez permisos y configuración atómica de permisos.
 
-**Integrantes:** Enrique Zavala, Marcelo Medina y Dylan Vazquez Soriano.
+**Integrantes:** Enrique Zavala, Marcelo Medina, Leonard Balmes y Dylan Vazquez Soriano.
 
 - [Actividad 7: instalación, migración, datos, pruebas y entrega](docs/unidad2-actividad7/README.md)
 - [Consultas GraphQL y login](docs/unidad2-actividad7/operaciones.graphql)
