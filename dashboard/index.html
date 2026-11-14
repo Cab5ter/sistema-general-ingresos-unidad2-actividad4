@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard financiero</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============ Inicio de sesión ============ -->
+  <main id="login-view" class="login">
+    <form id="login-form" class="login__card" novalidate>
+      <h1>Iniciar sesión</h1>
+      <p class="login__lead">Usa tu usuario de la empresa.</p>
+
+      <p id="login-message" class="message" role="alert" hidden></p>
+
+      <div class="field">
+        <label for="email">Correo electrónico</label>
+        <input id="email" name="email" type="email" autocomplete="username" placeholder="tu.correo@empresa.com" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <div class="field__row">
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Escribe tu contraseña" required>
+          <button type="button" id="toggle-password" class="btn btn--quiet" aria-pressed="false">Mostrar</button>
+        </div>
+      </div>
+
+      <button type="submit" id="login-btn" class="btn btn--block">Entrar</button>
+      <p class="login__server">Servidor: <span id="server-label"></span></p>
+    </form>
+  </main>
+
+  <!-- ============ Dashboard ============ -->
+  <div id="dashboard-view" hidden>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <div>
+          <h1>Dashboard financiero</h1>
+          <p id="header-meta" class="topbar__meta">Empresa</p>
+        </div>
+        <div class="topbar__session">
+          <span id="user-label"></span>
+          <button type="button" id="logout-btn" class="btn btn--ghost">Cerrar sesión</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <!-- Controles de período -->
+      <form id="period-form" class="controls" novalidate>
+        <div class="field">
+          <label for="from-date">Desde</label>
+          <input id="from-date" type="date" required>
+        </div>
+        <div class="field">
+          <label for="to-date">Hasta</label>
+          <input id="to-date" type="date" required>
+        </div>
+        <button type="submit" id="refresh-btn" class="btn">Actualizar</button>
+        <p id="period-error" class="message message--inline" role="alert" hidden></p>
+      </form>
+
+      <!-- Carga / error / acceso denegado -->
+      <div id="state-panel" class="state" role="status" hidden>
+        <h2 id="state-title"></h2>
+        <p id="state-text"></p>
+        <button type="button" id="state-retry" class="btn" hidden>Reintentar</button>
+      </div>
+
+      <!-- Resultados -->
+      <div id="content" hidden>
+        <p id="period-label" class="period"></p>
+
+        <!-- Indicadores generales -->
+        <section aria-labelledby="kpi-title">
+          <h2 id="kpi-title" class="sr-only">Indicadores generales</h2>
+          <div class="kpis">
+            <article class="kpi" title="Campo GraphQL: openingBalance">
+              <h3>Saldo inicial</h3>
+              <p class="kpi__value" id="kpi-opening" data-field="openingBalance">—</p>
+              <p class="kpi__hint">Dinero al inicio del período</p>
+            </article>
+            <article class="kpi" title="Campo GraphQL: totalIncome">
+              <h3>Ingresos</h3>
+              <p class="kpi__value" id="kpi-income" data-field="totalIncome">—</p>
+              <p class="kpi__hint">Entradas del período</p>
+            </article>
+            <article class="kpi" title="Campo GraphQL: totalExpense">
+              <h3>Egresos</h3>
+              <p class="kpi__value" id="kpi-expense" data-field="totalExpense">—</p>
+              <p class="kpi__hint">Salidas del período</p>
+            </article>
+            <article class="kpi" id="kpi-profit-card" title="Campo GraphQL: profit">
+              <h3>Profit</h3>
+              <p class="kpi__value" id="kpi-profit" data-field="profit">—</p>
+              <p class="kpi__hint">Ingresos − egresos</p>
+            </article>
+            <article class="kpi kpi--final" id="kpi-closing-card" title="Campo GraphQL: closingBalance">
+              <h3>Saldo final</h3>
+              <p class="kpi__value" id="kpi-closing" data-field="closingBalance">—</p>
+              <p class="kpi__hint" id="kpi-closing-hint">Saldo inicial + profit</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- Estado de riesgo -->
+        <section class="risk" aria-labelledby="risk-title">
+          <h2 id="risk-title" class="sr-only">Estado de riesgo</h2>
+          <div class="risk__item" title="Campo GraphQL: isInRed">
+            <span class="risk__label">General en rojo</span>
+            <strong id="risk-general" class="badge">—</strong>
+          </div>
+          <div class="risk__item" title="Campo GraphQL: accountsInRed">
+            <span class="risk__label">Cuentas en rojo</span>
+            <strong id="risk-count" class="badge">—</strong>
+            <span id="risk-names" class="risk__names"></span>
+          </div>
+        </section>
+
+        <!-- Detalle por cuenta -->
+        <section class="detail" aria-labelledby="detail-title">
+          <h2 id="detail-title">Detalle por cuenta</h2>
+          <p id="detail-note" class="detail__note" hidden></p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Cuenta</th>
+                  <th scope="col" class="num">Saldo inicial</th>
+                  <th scope="col" class="num">Ingresos</th>
+                  <th scope="col" class="num">Egresos</th>
+                  <th scope="col" class="num">Profit</th>
+                  <th scope="col" class="num">Saldo final</th>
+                </tr>
+              </thead>
+              <tbody id="accounts-body"></tbody>
+            </table>
+          </div>
+          <p class="detail__currency">Importes en <span id="currency-label">MXN</span>.</p>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
