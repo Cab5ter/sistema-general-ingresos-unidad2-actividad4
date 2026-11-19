@@ -51,4 +51,4 @@ class CompanyUser(Base):
     user: Mapped[User] = relationship(back_populates='memberships')
 
 # Registro de las tablas financieras de la actividad 4.
-from .finance_models import Account, Concept, AccountConcept, Transaction
+from .finance_models import Account, Concept, AccountConcept, Transaction, IdempotencyKey

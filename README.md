@@ -1,3 +1,11 @@
+# Sistema General de Ingresos · Unidad III · Actividad 2
+
+Continuación del proyecto anterior: idempotencia de `createTransaction` y dashboard administrativo en la misma aplicación.
+
+- [Guía de instalación, verificación y evidencias de la Unidad III, Actividad 2](docs/unidad3-actividad2/README.md)
+
+## Historial del proyecto
+
 # Sistema General de Ingresos · Unidad II · Actividad 7
 
 Balances por cuenta y balance general por período, profit y números rojos. Continúa el proyecto de la actividad 6 y conserva su JWT, cuatro roles, diez permisos y configuración atómica de permisos.

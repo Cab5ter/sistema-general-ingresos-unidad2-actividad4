@@ -95,6 +95,7 @@ type CompanyUser {
   joinedAt: Time!
   company: Company!
   user: User!
+  role: String
 }
 
 type CompanyUserRole {
@@ -180,6 +181,7 @@ input CreateTransactionInput {
   conceptId: ID!
   transactionType: TransactionType!
   amount: Decimal!
+  idempotencyKey: String
   transactionDate: DateTime
   shortDescription: String
   longDescription: String
@@ -252,6 +254,7 @@ enum PermissionResource {
 }
 
 type Query {
+  viewer: Viewer!
   accounts(companyId: ID!, accountType: AccountType, activeOnly: Boolean): [Account!]!
   concepts(companyId: ID!, conceptType: ConceptType, activeOnly: Boolean): [Concept!]!
   accountConcepts(accountId: ID!): [AccountConcept!]!
@@ -267,6 +270,14 @@ type Query {
   companies(activeOnly: Boolean): [Company!]!
   company(id: ID!): Company
   companyUsers(companyId: ID!): [CompanyUser!]!
+}
+
+type Viewer {
+  memberId: ID!
+  companyId: ID!
+  companyName: String!
+  roleCode: String
+  permissions: [String!]!
 }
 
 type Role {
@@ -315,6 +326,7 @@ type Transaction {
   conceptId: ID!
   transactionType: TransactionType!
   amount: Decimal!
+  idempotencyKey: String
   transactionDate: DateTime!
   capturedAt: DateTime!
   capturedBy: ID!

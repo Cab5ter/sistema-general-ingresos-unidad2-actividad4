@@ -138,6 +138,7 @@
   function clearSession() {
     session = null;
     companyName = null;
+    viewer = null;
     try { sessionStorage.removeItem(STORAGE_KEY); } catch (_) { /* nada */ }
   }
 
@@ -179,7 +180,8 @@
     $('user-label').textContent = (session.user && session.user.name) || '';
     if (!$('from-date').value) $('from-date').value = CFG.defaultFrom;
     if (!$('to-date').value) $('to-date').value = CFG.defaultTo;
-    loadBalance();
+    loadViewer();
+    switchSection('finance');
   }
 
   // ------------------------------------------------------------------
@@ -266,7 +268,7 @@
       if (current !== requestId) return; // llegó una respuesta vieja
       $('state-panel').hidden = true;
       render(data.generalBalance);
-      fetchCompanyName(data.generalBalance);
+      // La empresa se obtiene de viewer, autenticado, no del endpoint bootstrap.
     } catch (err) {
       if (current !== requestId) return;
       handleBalanceError(err);
@@ -391,6 +393,332 @@
   }
 
   // ------------------------------------------------------------------
+  // Unidad III: administración. Los datos y permisos vienen del API.
+  // ------------------------------------------------------------------
+  const VIEWER_QUERY = `query { viewer { memberId companyId companyName roleCode permissions } }`;
+  const USERS_QUERY = `query($id: ID!) { companyUsers(companyId: $id) { id isAdmin isActive role user { name email } } }`;
+  const ADMIN_ACCOUNTS_QUERY = `query($id: ID!) { accounts(companyId: $id) { id name accountType bankName clabe cardLastDigits isActive } }`;
+  const ADMIN_CONCEPTS_QUERY = `query($id: ID!) { concepts(companyId: $id) { id name conceptType isActive } }`;
+  const ASSIGNED_QUERY = `query($id: ID!) { accountConcepts(accountId: $id) { id isActive concept { id name conceptType } } }`;
+  const ADD_USER_MUTATION = `mutation($i: CreateCompanyUserInput!) { createCompanyUser(input: $i) { id } }`;
+  const DEACTIVATE_USER_MUTATION = `mutation($id: ID!) { deactivateCompanyUser(id: $id) { id isActive } }`;
+  const ADD_ACCOUNT_MUTATION = `mutation($i: CreateAccountInput!) { createAccount(input: $i) { id } }`;
+  const ADD_CONCEPT_MUTATION = `mutation($i: CreateConceptInput!) { createConcept(input: $i) { id } }`;
+  const ASSIGN_CONCEPT_MUTATION = `mutation($i: AssignConceptToAccountInput!) { assignConceptToAccount(input: $i) { id } }`;
+  const REMOVE_CONCEPT_MUTATION = `mutation($a: ID!, $c: ID!) { removeConceptFromAccount(accountId: $a, conceptId: $c) }`;
+  const ACCOUNT_TYPES = {CASH:'Efectivo',DEBIT:'Débito',CREDIT:'Crédito',SAVINGS:'Ahorro',INVESTMENT:'Inversión',WALLET:'Monedero',OTHER:'Otro'};
+  const CONCEPT_TYPES = {INCOME:'Ingreso',EXPENSE:'Egreso'};
+
+  let viewer = null;
+  let section = 'finance';
+  let adminTab = 'users';
+  let adminRequest = 0;
+  let adminUsers = [];
+  let adminAccounts = [];
+  let adminConcepts = [];
+  let assignedConcepts = [];
+
+  function permitted(permission) {
+    return !!viewer && viewer.permissions.includes(permission);
+  }
+
+  function adminMessage(message) {
+    $('admin-message').textContent = message || '';
+    $('admin-message').hidden = !message;
+  }
+
+  function adminError(err) {
+    if (err.code === 'UNAUTHENTICATED') {
+      logout('Sesión no válida o expirada. Inicia sesión nuevamente.');
+    } else {
+      adminMessage(err.message || 'No se pudo completar la operación.');
+    }
+  }
+
+  async function loadViewer() {
+    if (!session) return;
+    const token = session.token;
+    try {
+      const data = await graphql(VIEWER_QUERY, {}, token);
+      if (!session || session.token !== token) return;
+      viewer = data.viewer;
+      companyName = viewer.companyName;
+      $('header-meta').replaceChildren(el('span', {text: companyName}));
+      $('new-user-btn').hidden = !permitted('company.users.write');
+      $('new-account-btn').hidden = !permitted('accounts.write');
+      $('new-concept-btn').hidden = !permitted('concepts.write');
+      $('concept-assign-controls').hidden = !permitted('concepts.write');
+      if (section === 'admin') await loadAdminTab();
+    } catch (err) {
+      if (!session || session.token !== token) return;
+      adminError(err);
+    }
+  }
+
+  function switchSection(target) {
+    if (!session) return showLogin();
+    section = target;
+    $('financial-view').hidden = target !== 'finance';
+    $('administration-view').hidden = target !== 'admin';
+    $('dashboard-title').textContent = target === 'finance' ? 'Dashboard financiero' : 'Dashboard administrativo';
+    $('nav-finance').classList.toggle('is-current', target === 'finance');
+    $('nav-admin').classList.toggle('is-current', target === 'admin');
+    for (const id of ['nav-finance', 'nav-admin']) {
+      if ((id === 'nav-finance') === (target === 'finance')) $(id).setAttribute('aria-current','page');
+      else $(id).removeAttribute('aria-current');
+    }
+    if (target === 'finance') loadBalance();
+    else {
+      ++requestId;
+      if (viewer) loadAdminTab();
+      else loadViewer();
+    }
+  }
+
+  function switchAdminTab(tab) {
+    adminTab = tab;
+    for (const name of ['users','accounts','concepts']) {
+      $('module-' + name).hidden = name !== tab;
+      document.querySelector(`[data-admin-tab="${name}"]`).classList.toggle('is-selected', name === tab);
+    }
+    adminMessage('');
+    if (section === 'admin' && viewer) loadAdminTab();
+  }
+
+  async function adminQuery(query, variables = {}) {
+    if (!session) throw new ApiError('UNAUTHENTICATED', 'Debes iniciar sesión.');
+    return graphql(query, variables, session.token);
+  }
+
+  async function loadAdminTab() {
+    if (!viewer || !session || section !== 'admin') return;
+    const current = ++adminRequest;
+    adminMessage('');
+    try {
+      if (adminTab === 'users') {
+        if (!permitted('company.users.read')) return adminMessage('Tu rol no tiene permiso para ver usuarios.');
+        const data = await adminQuery(USERS_QUERY, {id: viewer.companyId});
+        if (current !== adminRequest || section !== 'admin' || adminTab !== 'users') return;
+        adminUsers = data.companyUsers;
+        renderAdminUsers();
+      } else if (adminTab === 'accounts') {
+        if (!permitted('accounts.read')) return adminMessage('Tu rol no tiene permiso para ver cuentas.');
+        const data = await adminQuery(ADMIN_ACCOUNTS_QUERY, {id: viewer.companyId});
+        if (current !== adminRequest || section !== 'admin' || adminTab !== 'accounts') return;
+        adminAccounts = data.accounts;
+        renderAdminAccounts();
+      } else {
+        if (!permitted('concepts.read')) return adminMessage('Tu rol no tiene permiso para ver conceptos.');
+        const data = await adminQuery(ADMIN_CONCEPTS_QUERY, {id: viewer.companyId});
+        if (current !== adminRequest || section !== 'admin' || adminTab !== 'concepts') return;
+        adminConcepts = data.concepts;
+        renderAdminConcepts();
+        if (permitted('accounts.read')) {
+          const accounts = await adminQuery(ADMIN_ACCOUNTS_QUERY, {id: viewer.companyId});
+          if (current !== adminRequest || section !== 'admin' || adminTab !== 'concepts') return;
+          adminAccounts = accounts.accounts;
+          renderAccountSelector();
+        } else {
+          $('concept-account').replaceChildren(el('option', {value:'',text:'Sin permiso de lectura de cuentas'}));
+        }
+      }
+    } catch (err) {
+      if (current === adminRequest) adminError(err);
+    }
+  }
+
+  function emptyRow(bodyId, columns, message) {
+    $(bodyId).replaceChildren(el('tr', {}, [el('td', {colspan: String(columns), text:message})]));
+  }
+
+  function renderAdminUsers() {
+    $('users-active').textContent = String(adminUsers.filter(x => x.isActive).length);
+    $('users-admin').textContent = String(adminUsers.filter(x => x.isAdmin).length);
+    $('users-inactive').textContent = String(adminUsers.filter(x => !x.isActive).length);
+    const needle = $('user-search').value.trim().toLocaleLowerCase();
+    const filter = $('user-filter').value;
+    const list = adminUsers.filter(x => {
+      const searchable = `${x.user.name} ${x.user.email}`.toLocaleLowerCase();
+      return searchable.includes(needle) && (filter === 'all' || x.isActive === (filter === 'active'));
+    });
+    if (!list.length) return emptyRow('users-body', 6, 'No hay usuarios con esos filtros.');
+    $('users-body').replaceChildren(...list.map(u => {
+      const action = el('td');
+      if (u.isActive && !u.isAdmin && permitted('company.users.write')) {
+        const btn = el('button', {type:'button',class:'admin-small-action',text:'Desactivar'});
+        btn.addEventListener('click', async () => {
+          if (!confirm(`¿Desactivar a ${u.user.name}? Dejará de operar, pero su historial se conservará.`)) return;
+          btn.disabled = true;
+          try {
+            await adminQuery(DEACTIVATE_USER_MUTATION, {id: u.id});
+            await loadAdminTab();
+          } catch (err) {adminError(err);btn.disabled=false;}
+        });
+        action.append(btn);
+      }
+      return el('tr', {}, [
+        el('td',{text:u.user.name}), el('td',{text:u.user.email}),
+        el('td',{text:u.role || 'Sin rol'}), el('td',{text:u.isAdmin?'Sí':'No'}),
+        el('td',{},[statusElement(u.isActive)]), action
+      ]);
+    }));
+  }
+
+  function statusElement(active) {
+    return el('span', {class:'admin-status ' + (active?'admin-status--active':'admin-status--inactive'), text:active?'Activo':'Inactivo'});
+  }
+
+  function renderAdminAccounts() {
+    const kind = $('account-filter').value;
+    const activeOnly = $('account-active-only').checked;
+    const list = adminAccounts.filter(a => (kind === 'all' || a.accountType === kind) && (!activeOnly || a.isActive));
+    if (!list.length) return emptyRow('catalog-accounts-body',5,'No hay cuentas con esos filtros.');
+    $('catalog-accounts-body').replaceChildren(...list.map(a => {
+      const last4 = a.cardLastDigits || (a.clabe ? a.clabe.slice(-4) : '');
+      return el('tr', {}, [el('td',{text:a.name}),el('td',{text:ACCOUNT_TYPES[a.accountType] || a.accountType}),
+        el('td',{text:a.bankName || '—'}),el('td',{text:last4 ? '•••• ' + last4 : '—'}),
+        el('td',{},[statusElement(a.isActive)])]);
+    }));
+  }
+
+  function renderAdminConcepts() {
+    const kind = $('concept-filter').value;
+    const activeOnly = $('concept-active-only').checked;
+    const list = adminConcepts.filter(c => (kind === 'all' || kind === c.conceptType) && (!activeOnly || c.isActive));
+    if (!list.length) return emptyRow('concepts-body',3,'No hay conceptos con esos filtros.');
+    $('concepts-body').replaceChildren(...list.map(c => el('tr', {}, [
+      el('td',{text:c.name}),el('td',{text:CONCEPT_TYPES[c.conceptType] || c.conceptType}),
+      el('td',{},[statusElement(c.isActive)])])));
+    renderConceptToAssign();
+  }
+
+  function renderAccountSelector() {
+    const selector = $('concept-account');
+    const old = selector.value;
+    selector.replaceChildren(el('option',{value:'',text:'Selecciona una cuenta'}),
+      ...adminAccounts.filter(a=>a.isActive).map(a => el('option',{value:a.id,text:a.name})));
+    if (adminAccounts.some(a => a.isActive && a.id === old)) selector.value = old;
+    if (selector.value) loadAssignedConcepts();
+    else {
+      assignedConcepts = [];
+      $('assigned-concepts').replaceChildren(el('li',{text:'Selecciona una cuenta para ver sus conceptos.'}));
+      renderConceptToAssign();
+    }
+  }
+
+  async function loadAssignedConcepts() {
+    const account = $('concept-account').value;
+    if (!account) {
+      assignedConcepts = [];
+      $('assigned-concepts').replaceChildren(el('li',{text:'Selecciona una cuenta para ver sus conceptos.'}));
+      renderConceptToAssign();
+      return;
+    }
+    const token = session && session.token;
+    try {
+      const data = await adminQuery(ASSIGNED_QUERY, {id:account});
+      if (!session || session.token !== token || account !== $('concept-account').value) return;
+      assignedConcepts = data.accountConcepts;
+      renderAssignedConcepts();
+    } catch (err) {adminError(err);}
+  }
+
+  function renderAssignedConcepts() {
+    if (!assignedConcepts.length) {
+      $('assigned-concepts').replaceChildren(el('li',{text:'Esta cuenta no tiene conceptos asignados.'}));
+    } else {
+      $('assigned-concepts').replaceChildren(...assignedConcepts.map(link => {
+        const listItem = el('li',{},[el('span',{text:`${link.concept.name} · ${CONCEPT_TYPES[link.concept.conceptType]}`})]);
+        if (permitted('concepts.write')) {
+          const remove = el('button',{type:'button',class:'admin-small-action',text:'Quitar'});
+          remove.addEventListener('click', async () => {
+            try {
+              await adminQuery(REMOVE_CONCEPT_MUTATION,{a:$('concept-account').value,c:link.concept.id});
+              await loadAssignedConcepts();
+            } catch (err) {adminError(err);}
+          });
+          listItem.append(remove);
+        }
+        return listItem;
+      }));
+    }
+    renderConceptToAssign();
+  }
+
+  function renderConceptToAssign() {
+    // Mantener incluso los ya asignados: el API debe demostrar el error de duplicado.
+    const taken = new Set(assignedConcepts.map(x => x.concept.id));
+    const options = adminConcepts.filter(c=>c.isActive);
+    const select = $('concept-to-assign');
+    select.replaceChildren(...options.map(c => el('option',{value:c.id,text:`${c.name} (${CONCEPT_TYPES[c.conceptType]})${taken.has(c.id) ? ' · asignado' : ''}`})));
+    $('assign-concept-btn').disabled = !options.length || !$('concept-account').value;
+    $('concept-assign-controls').hidden = !permitted('concepts.write') || !permitted('accounts.read');
+  }
+
+  function formObject(id) {
+    const obj = Object.fromEntries(new FormData($(id)).entries());
+    for (const [key,value] of Object.entries(obj)) if (typeof value === 'string') obj[key] = value.trim();
+    return Object.fromEntries(Object.entries(obj).filter(([,value])=>value !== ''));
+  }
+
+  async function submitAdminForm(event, kind) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    adminMessage('');
+    try {
+      const data = formObject(form.id);
+      if (kind === 'users') {
+        if (!permitted('company.users.write')) throw new ApiError('FORBIDDEN','No tienes permiso para registrar usuarios.');
+        await adminQuery(ADD_USER_MUTATION, {i:{...data, companyId:viewer.companyId}});
+      } else if (kind === 'accounts') {
+        if (!permitted('accounts.write')) throw new ApiError('FORBIDDEN','No tienes permiso para registrar cuentas.');
+        await adminQuery(ADD_ACCOUNT_MUTATION,{i:{...data, companyId:viewer.companyId}});
+      } else {
+        if (!permitted('concepts.write')) throw new ApiError('FORBIDDEN','No tienes permiso para registrar conceptos.');
+        await adminQuery(ADD_CONCEPT_MUTATION,{i:{...data, companyId:viewer.companyId}});
+      }
+      form.reset();
+      form.hidden = true;
+      await loadAdminTab();
+    } catch (err) {adminError(err);} finally {button.disabled=false;}
+  }
+
+  async function assignConcept() {
+    const accountId = $('concept-account').value;
+    const conceptId = $('concept-to-assign').value;
+    if (!accountId || !conceptId || !permitted('concepts.write')) return;
+    $('assign-concept-btn').disabled = true;
+    adminMessage('');
+    try {
+      await adminQuery(ASSIGN_CONCEPT_MUTATION,{i:{accountId,conceptId}});
+      await loadAssignedConcepts();
+    } catch (err) {adminError(err);} finally {renderConceptToAssign();}
+  }
+
+  function initAdministration() {
+    $('nav-finance').addEventListener('click', () => switchSection('finance'));
+    $('nav-admin').addEventListener('click', () => switchSection('admin'));
+    document.querySelectorAll('[data-admin-tab]').forEach(node => node.addEventListener('click', () => switchAdminTab(node.dataset.adminTab)));
+    document.querySelectorAll('[data-cancel-form]').forEach(node => node.addEventListener('click', () => { $(node.dataset.cancelForm).hidden=true; adminMessage(''); }));
+    for (const [button,form] of [['new-user-btn','user-form'],['new-account-btn','account-form'],['new-concept-btn','concept-form']]) {
+      $(button).addEventListener('click',()=> {$(form).hidden=false;$(form).querySelector('input').focus();});
+    }
+    $('user-search').addEventListener('input', renderAdminUsers);
+    $('user-filter').addEventListener('change',renderAdminUsers);
+    $('account-filter').addEventListener('change',renderAdminAccounts);
+    $('account-active-only').addEventListener('change',renderAdminAccounts);
+    $('concept-filter').addEventListener('change',renderAdminConcepts);
+    $('concept-active-only').addEventListener('change',renderAdminConcepts);
+    $('concept-account').addEventListener('change',loadAssignedConcepts);
+    $('user-form').addEventListener('submit',e=>submitAdminForm(e,'users'));
+    $('account-form').addEventListener('submit',e=>submitAdminForm(e,'accounts'));
+    $('concept-form').addEventListener('submit',e=>submitAdminForm(e,'concepts'));
+    $('assign-concept-btn').addEventListener('click',assignConcept);
+  }
+
+  // ------------------------------------------------------------------
   // Arranque
   // ------------------------------------------------------------------
   function init() {
@@ -410,6 +738,7 @@
     $('to-date').addEventListener('change', loadBalance);
     $('state-retry').addEventListener('click', loadBalance);
     $('logout-btn').addEventListener('click', () => logout());
+    initAdministration();
 
     session = loadSession();
     if (session) enterDashboard();

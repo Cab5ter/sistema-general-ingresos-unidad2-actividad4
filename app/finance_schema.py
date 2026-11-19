@@ -150,6 +150,7 @@ class CreateTransactionInput:
     concept_id: strawberry.ID
     transaction_type: TransactionType
     amount: Decimal
+    idempotency_key: str | None = strawberry.UNSET
     transaction_date: OperationDateTime | None = strawberry.UNSET
     short_description: str | None = strawberry.UNSET
     long_description: str | None = strawberry.UNSET

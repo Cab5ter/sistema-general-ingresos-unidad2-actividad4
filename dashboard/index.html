@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dashboard financiero</title>
+  <title>Sistema General de Ingresos · Dashboards</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@
     <header class="topbar">
       <div class="topbar__inner">
         <div>
-          <h1>Dashboard financiero</h1>
+          <h1 id="dashboard-title">Dashboard financiero</h1>
           <p id="header-meta" class="topbar__meta">Empresa</p>
         </div>
         <div class="topbar__session">
@@ -52,7 +52,12 @@
       </div>
     </header>
 
-    <main class="page">
+    <nav class="app-navigation" aria-label="Secciones principales">
+      <button class="app-navigation__tab is-current" id="nav-finance" type="button" aria-current="page">Dashboard financiero</button>
+      <button class="app-navigation__tab" id="nav-admin" type="button">Dashboard administrativo</button>
+    </nav>
+
+    <main class="page" id="financial-view">
       <!-- Controles de período -->
       <form id="period-form" class="controls" novalidate>
         <div class="field">
@@ -145,6 +150,60 @@
           </div>
           <p class="detail__currency">Importes en <span id="currency-label">MXN</span>.</p>
         </section>
+      </div>
+    </main>
+
+    <!-- Las tres secciones de administración comparten la misma sesión y API -->
+    <main class="page administration" id="administration-view" hidden>
+      <div class="admin-layout">
+        <nav class="admin-sidebar" aria-label="Módulos administrativos">
+          <button type="button" class="admin-tab is-selected" data-admin-tab="users">Usuarios</button>
+          <button type="button" class="admin-tab" data-admin-tab="accounts">Cuentas</button>
+          <button type="button" class="admin-tab" data-admin-tab="concepts">Conceptos</button>
+        </nav>
+        <div class="admin-main">
+          <p id="admin-message" class="message" role="alert" hidden></p>
+
+          <section id="module-users" class="admin-module" aria-labelledby="users-heading">
+            <div class="admin-titlebar"><div><h2 id="users-heading">Usuarios</h2><p>Personas de la empresa y sus membresías.</p></div><button type="button" id="new-user-btn" class="btn" hidden>Nuevo usuario</button></div>
+            <div class="admin-kpis" aria-live="polite">
+              <div>Usuarios activos<strong id="users-active">—</strong></div>
+              <div>Administrador principal<strong id="users-admin">—</strong></div>
+              <div>Inactivos<strong id="users-inactive">—</strong></div>
+            </div>
+            <div class="admin-filters">
+              <label for="user-search">Buscar usuario<input id="user-search" placeholder="Nombre o correo" autocomplete="off"></label>
+              <label for="user-filter">Estado<select id="user-filter"><option value="all">Todos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></label>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Administrador</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="users-body"><tr><td colspan="6">Cargando usuarios…</td></tr></tbody></table></div>
+            <form id="user-form" class="admin-form" hidden><h3>Nuevo usuario</h3><label>Nombre<input name="name" maxlength="200" required></label><label>Correo<input name="email" type="email" required></label><label>Contraseña<input name="password" type="password" minlength="10" autocomplete="new-password" required></label><div class="admin-actions"><button class="btn" type="submit">Guardar</button><button class="btn btn--muted" type="button" data-cancel-form="user-form">Cancelar</button></div></form>
+          </section>
+
+          <section id="module-accounts" class="admin-module" aria-labelledby="accounts-heading" hidden>
+            <div class="admin-titlebar"><div><h2 id="accounts-heading">Cuentas</h2><p>Dónde se guarda el dinero de la empresa.</p></div><button type="button" class="btn" id="new-account-btn" hidden>Nueva cuenta</button></div>
+            <div class="admin-filters"><label for="account-filter">Tipo de cuenta<select id="account-filter"><option value="all">Todos</option><option value="CASH">Efectivo</option><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="SAVINGS">Ahorro</option><option value="INVESTMENT">Inversión</option><option value="WALLET">Monedero</option><option value="OTHER">Otro</option></select></label><label class="admin-check"><input type="checkbox" id="account-active-only"> Solo activas</label></div>
+            <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Banco</th><th>Referencia</th><th>Estado</th></tr></thead><tbody id="catalog-accounts-body"><tr><td colspan="5">Cargando cuentas…</td></tr></tbody></table></div>
+            <form id="account-form" class="admin-form" hidden><h3>Nueva cuenta</h3><label>Nombre<input name="name" maxlength="200" required></label><label>Tipo de cuenta<select name="accountType" required><option value="CASH">Efectivo</option><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="SAVINGS">Ahorro</option><option value="INVESTMENT">Inversión</option><option value="WALLET">Monedero</option><option value="OTHER">Otro</option></select></label><label>Banco (opcional)<input name="bankName"></label><label>CLABE (opcional)<input name="clabe" inputmode="numeric" maxlength="18"></label><label>Descripción corta (opcional)<input name="shortDescription"></label><div class="admin-actions"><button class="btn" type="submit">Guardar</button><button class="btn btn--muted" type="button" data-cancel-form="account-form">Cancelar</button></div></form>
+          </section>
+
+          <section id="module-concepts" class="admin-module" aria-labelledby="concepts-heading" hidden>
+            <div class="admin-titlebar"><div><h2 id="concepts-heading">Conceptos</h2><p>Motivos de ingreso y egreso y conceptos permitidos en cada cuenta.</p></div><button type="button" class="btn" id="new-concept-btn" hidden>Nuevo concepto</button></div>
+            <div class="concept-layout">
+              <div class="admin-panel">
+                <h3>Catálogo</h3>
+                <div class="admin-filters"><label for="concept-filter">Tipo<select id="concept-filter"><option value="all">Todos</option><option value="INCOME">Ingreso</option><option value="EXPENSE">Egreso</option></select></label><label class="admin-check"><input type="checkbox" id="concept-active-only"> Solo activos</label></div>
+                <div class="table-wrap"><table><thead><tr><th>Concepto</th><th>Tipo</th><th>Estado</th></tr></thead><tbody id="concepts-body"><tr><td colspan="3">Cargando conceptos…</td></tr></tbody></table></div>
+              </div>
+              <div class="admin-panel">
+                <h3>Conceptos de una cuenta</h3>
+                <label class="admin-field">Cuenta<select id="concept-account"><option value="">Selecciona una cuenta</option></select></label>
+                <ul id="assigned-concepts" class="assigned-list"><li>Selecciona una cuenta para ver sus conceptos.</li></ul>
+                <div id="concept-assign-controls" hidden><label class="admin-field">Asignar concepto<select id="concept-to-assign"></select></label><button class="btn" type="button" id="assign-concept-btn">Asignar concepto</button></div>
+              </div>
+            </div>
+            <form id="concept-form" class="admin-form" hidden><h3>Nuevo concepto</h3><label>Nombre<input name="name" maxlength="200" required></label><label>Tipo<select name="conceptType" required><option value="INCOME">Ingreso</option><option value="EXPENSE">Egreso</option></select></label><label>Descripción corta (opcional)<input name="shortDescription"></label><div class="admin-actions"><button class="btn" type="submit">Guardar</button><button class="btn btn--muted" type="button" data-cancel-form="concept-form">Cancelar</button></div></form>
+          </section>
+        </div>
       </div>
     </main>
   </div>

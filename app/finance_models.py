@@ -90,3 +90,19 @@ class Transaction(Base):
     account: Mapped[Account] = relationship()
     concept: Mapped[Concept] = relationship()
     captured_by_user: Mapped[User] = relationship()
+
+
+class IdempotencyKey(Base):
+    """Llave duradera y movimiento: se confirman juntos con un solo COMMIT."""
+    __tablename__ = 'idempotency_keys'
+    __table_args__ = (
+        UniqueConstraint('company_id', 'operation', 'key', name='uq_company_operation_idempotency_key'),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    company_id: Mapped[int] = mapped_column(ForeignKey('companies.id'))
+    operation: Mapped[str] = mapped_column(String(64))
+    key: Mapped[str] = mapped_column(String(64))
+    request_hash: Mapped[str] = mapped_column(String(64))
+    transaction_id: Mapped[int] = mapped_column(ForeignKey('transactions.id'))
+    created_at: Mapped[datetime] = mapped_column(Timestamp, default=now)
+    transaction: Mapped[Transaction] = relationship()

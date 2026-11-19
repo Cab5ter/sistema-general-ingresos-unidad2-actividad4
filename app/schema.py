@@ -58,6 +58,16 @@ class CompanyUser:
     joined_at: Time
     company: Company
     user: User
+    role: Optional[str]
+
+
+@strawberry.type
+class Viewer:
+    member_id: strawberry.ID
+    company_id: strawberry.ID
+    company_name: str
+    role_code: Optional[str]
+    permissions: list[str]
 
 
 @strawberry.type
@@ -120,12 +130,19 @@ def convert(kind, obj):
     if obj is None:
         return None
     fields = kind.__dataclass_fields__
-    values = {key: getattr(obj, key) for key in fields if key not in ('company', 'user')}
+    values = {key: getattr(obj, key) for key in fields if key not in ('company', 'user', 'role')}
     for key in ('id', 'company_id', 'user_id'):
         if key in values:
             values[key] = strawberry.ID(str(values[key]))
     if kind is CompanyUser:
-        values.update(company=convert(Company, obj.company), user=convert(User, obj.user))
+        from sqlalchemy import select
+        from sqlalchemy.orm import object_session
+        from .access_models import CompanyUserRoleModel
+        assignment = object_session(obj).scalar(select(CompanyUserRoleModel).where(
+            CompanyUserRoleModel.company_user_id == obj.id,
+            CompanyUserRoleModel.is_active.is_(True)))
+        values.update(company=convert(Company, obj.company), user=convert(User, obj.user),
+                      role=assignment.role.code if assignment and assignment.role.is_active else None)
     return kind(**values)
 
 
@@ -156,6 +173,28 @@ from .balance_schema import BalanceQuery
 
 @strawberry.type
 class Query(FinanceQuery, AccessQuery, BalanceQuery):
+    @strawberry.field
+    def viewer(self, info: Info) -> Viewer:
+        """Empresa y permisos efectivos de la sesión (sin exponer secretos ni roles editables)."""
+        def read(svc):
+            from sqlalchemy import select
+            from .access_models import CompanyUserRoleModel, RolePermissionModel, PermissionModel
+            member = svc.leer_actor()
+            assignment = svc.db.scalar(select(CompanyUserRoleModel).where(
+                CompanyUserRoleModel.company_user_id == member.id,
+                CompanyUserRoleModel.is_active.is_(True)))
+            role = assignment.role if assignment and assignment.role.is_active else None
+            permissions = []
+            if role is not None:
+                permissions = list(svc.db.scalars(select(PermissionModel.code)
+                    .join(RolePermissionModel, RolePermissionModel.permission_id == PermissionModel.id)
+                    .where(RolePermissionModel.role_id == role.id,
+                           RolePermissionModel.is_active.is_(True),
+                           PermissionModel.is_active.is_(True)).order_by(PermissionModel.code)))
+            return Viewer(member_id=str(member.id), company_id=str(member.company_id),
+                          company_name=member.company.name,
+                          role_code=role.code if role is not None else None, permissions=permissions)
+        return execute(info, read)
     @strawberry.field
     def companies(self, info: Info, active_only: Optional[bool] = strawberry.UNSET) -> list[Company]:
         return execute(info, lambda svc: [convert(Company, x) for x in svc.companies(active_only)])

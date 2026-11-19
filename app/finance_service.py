@@ -1,4 +1,7 @@
-from datetime import timezone
+from datetime import timezone, datetime
+import hashlib
+import json
+from uuid import UUID
 from decimal import Decimal, localcontext
 from sqlalchemy import select
 from . import models as m
@@ -95,8 +98,39 @@ class FinanceService(Service):
 
     def create_transaction(self, fields):
         fields = dict(fields)
+        key = fields.pop('idempotency_key', None)
         actor = self.actor()
         account, concept = self.pair(fields['account_id'], fields['concept_id'])
+        digest = None
+        if key is not None:
+            # La misma acción usa siempre el mismo UUID; un movimiento nuevo usa otro.
+            try:
+                if not isinstance(key, str):
+                    raise ValueError
+                key = str(UUID(key))
+            except (ValueError, AttributeError, TypeError):
+                fail('idempotencyKey debe ser un UUID válido.')
+
+            # Hash de los datos que mandó el cliente, nunca del instante autogenerado.
+            def canonical(value):
+                if isinstance(value, Decimal):
+                    return format(value.normalize(), 'f')
+                if isinstance(value, datetime):
+                    return value.astimezone(timezone.utc).isoformat()
+                return value
+            body = {k: canonical(v) for k, v in fields.items()}
+            body['account_id'] = int(account.id)
+            body['concept_id'] = int(concept.id)
+            digest = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(',', ':'),
+                                                 ensure_ascii=False).encode('utf-8')).hexdigest()
+            previous = self.db.scalar(select(m.IdempotencyKey).where(
+                m.IdempotencyKey.company_id == account.company_id,
+                m.IdempotencyKey.operation == 'createTransaction',
+                m.IdempotencyKey.key == key))
+            if previous is not None:
+                if previous.request_hash != digest:
+                    fail('Esa llave de idempotencia ya se usó con otros datos.', 'CONFLICT')
+                return previous.transaction
         amount = fields['amount']
         if not isinstance(amount, Decimal) or not amount.is_finite() or amount <= 0:
             fail('El monto debe ser un decimal finito estrictamente mayor que cero.')
@@ -127,6 +161,11 @@ class FinanceService(Service):
                             captured_by=actor.id)
         self.db.add(obj)
         self.db.flush()
+        if key is not None:
+            # execute() confirma llave y movimiento en una misma sesión/transacción.
+            self.db.add(m.IdempotencyKey(company_id=account.company_id, operation='createTransaction',
+                                         key=key, request_hash=digest, transaction_id=obj.id))
+            self.db.flush()  # índice único; lock_operation serializa peticiones concurrentes
         return obj
 
     def transaction_query(self, account_id=None, transaction_type=None):
