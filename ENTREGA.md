@@ -1,3 +1,17 @@
+# Unidad III · Actividad 3
+
+Cliente actualizado en `dashboard/`, matriz consultada al API, vista previa y guardado por columna, asignación de puestos en Usuarios y verificación con JWT.
+
+- Instrucciones: `docs/unidad3-actividad3/README.md`.
+- Capturas y pruebas: `docs/unidad3-actividad3/evidencias.md`.
+- Empaquetar: `python scripts/package_unidad3_actividad3.py`.
+- Archivo: `entrega/unidad3_actividad3_equipo.zip`.
+- Repositorio: https://github.com/Cab5ter/sistema-general-ingresos-unidad2-actividad4
+
+El envío a Teams corresponde al estudiante.
+
+---
+
 # Unidad II · Actividad 7: Gestión de balances
 
 Continuación del Sistema General de Ingresos. Entrega en equipo.

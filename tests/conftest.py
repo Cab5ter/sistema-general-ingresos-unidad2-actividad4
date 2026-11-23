@@ -29,7 +29,7 @@ def api(tmp_path,request):
     admin_engine=None
     dbname='ingresos_test_'+uuid.uuid4().hex
     if os.getenv('TEST_MYSQL')=='1':
-        env=dotenv_values('.env.docker')
+        env=dotenv_values(os.getenv('TEST_MYSQL_SETTINGS', '.env.docker'))
         root=URL.create('mysql+pymysql',username='root',password=env['MYSQL_ROOT_PASSWORD'],host='127.0.0.1',port=int(env['MYSQL_PORT']))
         admin_engine=create_engine(root,isolation_level='AUTOCOMMIT')
         with admin_engine.connect() as db:

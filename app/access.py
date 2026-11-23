@@ -10,6 +10,11 @@ PERMISSIONS = (
     'company.users.read', 'company.users.write', 'accounts.read', 'accounts.write',
     'concepts.read', 'concepts.write', 'transactions.read', 'transactions.write', 'roles.read', 'roles.write',
 )
+PERMISSION_NAMES = dict(zip(PERMISSIONS, (
+    'Ver usuarios', 'Administrar usuarios', 'Ver cuentas', 'Crear cuentas',
+    'Ver conceptos', 'Administrar conceptos', 'Ver movimientos', 'Registrar movimientos',
+    'Ver la matriz', 'Cambiar la matriz y asignar puestos',
+)))
 MATRIX = {
     'ADMINISTRADOR': PERMISSIONS,
     'CONTADOR': ('company.users.read', 'accounts.read', 'accounts.write', 'concepts.read',
@@ -68,9 +73,14 @@ def seed_catalogs(db):
     if db.scalar(select(func.count()).select_from(Role)) == 0:
         db.add_all(Role(code=code, name=code.capitalize()) for code in MATRIX)
     if db.scalar(select(func.count()).select_from(Permission)) == 0:
-        db.add_all(Permission(code=code, name=code) for code in PERMISSIONS)
+        db.add_all(Permission(code=code, name=PERMISSION_NAMES[code]) for code in PERMISSIONS)
     db.flush()
     permissions = {x.code: x for x in db.scalars(select(Permission))}
+    # Actualiza solo los nombres técnicos del seed anterior; conserva nombres propios
+    # y todas las concesiones/revocaciones que ya tenga la base.
+    for code, permission in permissions.items():
+        if code in PERMISSION_NAMES and permission.name == code:
+            permission.name = PERMISSION_NAMES[code]
     for role in db.scalars(select(Role)):
         # Contamos TAMBIÉN las relaciones inactivas: una revocación no se restaura.
         configured = db.scalar(select(RolePermission.id).where(RolePermission.role_id == role.id).limit(1))
@@ -105,7 +115,13 @@ def initialize(engine, sessions):
                         nullable = 'NULL' if column['nullable'] else 'NOT NULL'
                         connection.execute(text(f"ALTER TABLE {table} MODIFY {column['name']} DATETIME(6) {nullable}"))
             for table, index, flag, column in indexes:
-                if index not in {i['name'] for i in inspect(connection).get_indexes(table)}:
+                # SQLAlchemy omite algunos índices funcionales al reflejar MySQL.
+                # information_schema sí los incluye y permite reiniciar sin recrearlos.
+                existing = set(connection.scalars(text(
+                    'SELECT DISTINCT INDEX_NAME FROM information_schema.statistics '
+                    'WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table'
+                ), {'table': table}))
+                if index not in existing:
                     connection.execute(text(f'CREATE UNIQUE INDEX {index} ON {table} '
                                             f'((CASE WHEN {flag} = 1 THEN {column} ELSE NULL END))'))
     with sessions.begin() as db:

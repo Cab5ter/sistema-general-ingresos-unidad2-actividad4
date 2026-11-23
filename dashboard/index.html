@@ -58,6 +58,16 @@
     </nav>
 
     <main class="page" id="financial-view">
+      <div class="admin-titlebar"><p>Balances de la empresa</p><button type="button" id="new-transaction-btn" class="btn" hidden>Registrar movimiento</button></div>
+      <p id="transaction-message" class="message" role="status" hidden></p>
+      <form id="transaction-form" class="admin-form" hidden>
+        <h3>Registrar movimiento</h3>
+        <label>Cuenta<select id="transaction-account" name="accountId" required></select></label>
+        <label>Concepto<select id="transaction-concept" name="conceptId" required></select></label>
+        <label>Importe<input name="amount" inputmode="decimal" pattern="[0-9]+([.][0-9]{1,2})?" required></label>
+        <label>Descripción<input name="shortDescription" maxlength="255"></label>
+        <div class="admin-actions"><button class="btn" type="submit">Guardar movimiento</button><button class="btn btn--muted" type="button" data-cancel-form="transaction-form">Cancelar</button></div>
+      </form>
       <!-- Controles de período -->
       <form id="period-form" class="controls" novalidate>
         <div class="field">
@@ -157,9 +167,10 @@
     <main class="page administration" id="administration-view" hidden>
       <div class="admin-layout">
         <nav class="admin-sidebar" aria-label="Módulos administrativos">
-          <button type="button" class="admin-tab is-selected" data-admin-tab="users">Usuarios</button>
-          <button type="button" class="admin-tab" data-admin-tab="accounts">Cuentas</button>
-          <button type="button" class="admin-tab" data-admin-tab="concepts">Conceptos</button>
+          <button type="button" class="admin-tab is-selected" data-admin-tab="users" hidden>Usuarios</button>
+          <button type="button" class="admin-tab" data-admin-tab="accounts" hidden>Cuentas</button>
+          <button type="button" class="admin-tab" data-admin-tab="concepts" hidden>Conceptos</button>
+          <button type="button" id="roles-tab" class="admin-tab" data-admin-tab="roles" hidden>Roles y permisos</button>
         </nav>
         <div class="admin-main">
           <p id="admin-message" class="message" role="alert" hidden></p>
@@ -202,6 +213,16 @@
               </div>
             </div>
             <form id="concept-form" class="admin-form" hidden><h3>Nuevo concepto</h3><label>Nombre<input name="name" maxlength="200" required></label><label>Tipo<select name="conceptType" required><option value="INCOME">Ingreso</option><option value="EXPENSE">Egreso</option></select></label><label>Descripción corta (opcional)<input name="shortDescription"></label><div class="admin-actions"><button class="btn" type="submit">Guardar</button><button class="btn btn--muted" type="button" data-cancel-form="concept-form">Cancelar</button></div></form>
+          </section>
+          <section id="module-roles" class="admin-module" aria-labelledby="roles-heading" hidden>
+            <div class="admin-titlebar"><div><h2 id="roles-heading">Roles y permisos</h2><p>Catálogo compartido. Un cambio en el puesto vale para todas las empresas.</p></div><button type="button" id="reload-roles" class="btn btn--muted">Volver a consultar</button></div>
+            <p id="matrix-status" role="status" class="matrix-note"></p>
+            <div id="matrix-container" class="table-wrap" tabindex="0" role="region" aria-label="Matriz de roles y permisos"></div>
+            <section id="role-preview" class="admin-panel role-preview" aria-labelledby="preview-title" hidden>
+              <h3 id="preview-title">Vista previa</h3>
+              <dl id="preview-summary"></dl>
+              <div class="admin-actions"><button type="button" id="save-role-permissions" class="btn">Guardar columna</button><button type="button" id="discard-role-permissions" class="btn btn--muted">Descartar</button></div>
+            </section>
           </section>
         </div>
       </div>

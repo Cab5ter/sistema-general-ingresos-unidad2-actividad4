@@ -1,0 +1,34 @@
+{
+  "data": {
+    "rolePermissions": [
+      {
+        "isActive": true,
+        "permission": {
+          "id": "3",
+          "code": "accounts.read"
+        }
+      },
+      {
+        "isActive": true,
+        "permission": {
+          "id": "5",
+          "code": "concepts.read"
+        }
+      },
+      {
+        "isActive": true,
+        "permission": {
+          "id": "7",
+          "code": "transactions.read"
+        }
+      },
+      {
+        "isActive": true,
+        "permission": {
+          "id": "8",
+          "code": "transactions.write"
+        }
+      }
+    ]
+  }
+}

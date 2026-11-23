@@ -162,6 +162,12 @@
   function logout(message) {
     requestId += 1; // descarta cualquier respuesta pendiente
     clearSession();
+    ++adminRequest;
+    matrix = null;
+    rolePreview = null;
+    adminRoles = [];
+    adminUsers = [];
+    for (const id of ['user-form','account-form','concept-form','transaction-form','role-preview']) $(id).hidden = true;
     resetDashboard();
     showLogin(message, message ? 'notice' : undefined);
   }
@@ -180,7 +186,6 @@
     $('user-label').textContent = (session.user && session.user.name) || '';
     if (!$('from-date').value) $('from-date').value = CFG.defaultFrom;
     if (!$('to-date').value) $('to-date').value = CFG.defaultTo;
-    loadViewer();
     switchSection('finance');
   }
 
@@ -422,9 +427,11 @@
     return !!viewer && viewer.permissions.includes(permission);
   }
 
-  function adminMessage(message) {
+  function adminMessage(message, success = false) {
     $('admin-message').textContent = message || '';
     $('admin-message').hidden = !message;
+    $('admin-message').classList.toggle('message--success', success);
+    $('admin-message').setAttribute('role', success ? 'status' : 'alert');
   }
 
   function adminError(err) {
@@ -448,41 +455,75 @@
       $('new-account-btn').hidden = !permitted('accounts.write');
       $('new-concept-btn').hidden = !permitted('concepts.write');
       $('concept-assign-controls').hidden = !permitted('concepts.write');
-      if (section === 'admin') await loadAdminTab();
+      updateAccessControls();
+      return true;
     } catch (err) {
       if (!session || session.token !== token) return;
       adminError(err);
     }
   }
 
-  function switchSection(target) {
+  const TAB_PERMISSIONS = {users:'company.users.read', accounts:'accounts.read', concepts:'concepts.read', roles:'roles.read'};
+
+  function updateAccessControls() {
+    for (const [tab, permission] of Object.entries(TAB_PERMISSIONS)) {
+      const button = document.querySelector(`[data-admin-tab="${tab}"]`);
+      button.hidden = !permitted(permission);
+    }
+    $('nav-finance').hidden = !permitted('accounts.read') || !permitted('transactions.read');
+    $('nav-admin').hidden = !Object.values(TAB_PERMISSIONS).some(permitted);
+    $('new-transaction-btn').hidden = !permitted('transactions.write');
+    if (!permitted('transactions.write')) $('transaction-form').hidden = true;
+    for (const [permission, form] of [['company.users.write','user-form'], ['accounts.write','account-form'], ['concepts.write','concept-form']]) {
+      if (!permitted(permission)) $(form).hidden = true;
+    }
+    if (!permitted('roles.write')) { rolePreview = null; $('role-preview').hidden = true; }
+  }
+
+  async function switchSection(target) {
     if (!session) return showLogin();
+    ++adminRequest;
+    ++requestId;
+    rolePreview = null;
+    $('role-preview').hidden = true;
     section = target;
     $('financial-view').hidden = target !== 'finance';
     $('administration-view').hidden = target !== 'admin';
     $('dashboard-title').textContent = target === 'finance' ? 'Dashboard financiero' : 'Dashboard administrativo';
-    $('nav-finance').classList.toggle('is-current', target === 'finance');
-    $('nav-admin').classList.toggle('is-current', target === 'admin');
-    for (const id of ['nav-finance', 'nav-admin']) {
-      if ((id === 'nav-finance') === (target === 'finance')) $(id).setAttribute('aria-current','page');
-      else $(id).removeAttribute('aria-current');
+    for (const name of ['finance','admin']) {
+      $('nav-' + name).classList.toggle('is-current', name === target);
+      if (name === target) $('nav-' + name).setAttribute('aria-current','page');
+      else $('nav-' + name).removeAttribute('aria-current');
     }
+    if (!await loadViewer() || section !== target) return;
     if (target === 'finance') loadBalance();
     else {
-      ++requestId;
-      if (viewer) loadAdminTab();
-      else loadViewer();
+      if (!permitted(TAB_PERMISSIONS[adminTab])) {
+        adminTab = Object.keys(TAB_PERMISSIONS).find(tab => permitted(TAB_PERMISSIONS[tab])) || 'users';
+      }
+      showAdminTab();
+      loadAdminTab();
     }
   }
 
-  function switchAdminTab(tab) {
-    adminTab = tab;
-    for (const name of ['users','accounts','concepts']) {
-      $('module-' + name).hidden = name !== tab;
-      document.querySelector(`[data-admin-tab="${name}"]`).classList.toggle('is-selected', name === tab);
+  function showAdminTab() {
+    for (const name of Object.keys(TAB_PERMISSIONS)) {
+      $('module-' + name).hidden = name !== adminTab;
+      const button = document.querySelector(`[data-admin-tab="${name}"]`);
+      button.classList.toggle('is-selected', name === adminTab);
+      if (name === adminTab) button.setAttribute('aria-current','page');
+      else button.removeAttribute('aria-current');
     }
+  }
+
+  async function switchAdminTab(tab) {
+    ++adminRequest;
+    adminTab = tab;
+    rolePreview = null;
+    $('role-preview').hidden = true;
+    showAdminTab();
     adminMessage('');
-    if (section === 'admin' && viewer) loadAdminTab();
+    if (section === 'admin' && await loadViewer() && adminTab === tab) loadAdminTab();
   }
 
   async function adminQuery(query, variables = {}) {
@@ -494,12 +535,18 @@
     if (!viewer || !session || section !== 'admin') return;
     const current = ++adminRequest;
     adminMessage('');
+    for (const id of ['users-body','catalog-accounts-body','concepts-body']) $(id).replaceChildren();
     try {
       if (adminTab === 'users') {
         if (!permitted('company.users.read')) return adminMessage('Tu rol no tiene permiso para ver usuarios.');
         const data = await adminQuery(USERS_QUERY, {id: viewer.companyId});
         if (current !== adminRequest || section !== 'admin' || adminTab !== 'users') return;
         adminUsers = data.companyUsers;
+        if (permitted('roles.write')) {
+          const catalog = await adminQuery(ROLES_QUERY);
+          if (current !== adminRequest) return;
+          adminRoles = orderedRoles(catalog.roles);
+        } else adminRoles = [];
         renderAdminUsers();
       } else if (adminTab === 'accounts') {
         if (!permitted('accounts.read')) return adminMessage('Tu rol no tiene permiso para ver cuentas.');
@@ -507,6 +554,8 @@
         if (current !== adminRequest || section !== 'admin' || adminTab !== 'accounts') return;
         adminAccounts = data.accounts;
         renderAdminAccounts();
+      } else if (adminTab === 'roles') {
+        await loadMatrix(current);
       } else {
         if (!permitted('concepts.read')) return adminMessage('Tu rol no tiene permiso para ver conceptos.');
         const data = await adminQuery(ADMIN_CONCEPTS_QUERY, {id: viewer.companyId});
@@ -558,7 +607,7 @@
       }
       return el('tr', {}, [
         el('td',{text:u.user.name}), el('td',{text:u.user.email}),
-        el('td',{text:u.role || 'Sin rol'}), el('td',{text:u.isAdmin?'Sí':'No'}),
+        roleCell(u), el('td',{text:u.isAdmin?'Sí':'No'}),
         el('td',{},[statusElement(u.isActive)]), action
       ]);
     }));
@@ -716,6 +765,275 @@
     $('account-form').addEventListener('submit',e=>submitAdminForm(e,'accounts'));
     $('concept-form').addEventListener('submit',e=>submitAdminForm(e,'concepts'));
     $('assign-concept-btn').addEventListener('click',assignConcept);
+    $('reload-roles').addEventListener('click', () => switchAdminTab('roles'));
+    $('save-role-permissions').addEventListener('click', saveRolePermissions);
+    $('discard-role-permissions').addEventListener('click', () => loadAdminTab());
+    $('new-transaction-btn').addEventListener('click', openTransactionForm);
+    $('transaction-account').addEventListener('change', loadTransactionConcepts);
+    $('transaction-form').addEventListener('submit', submitTransaction);
+    window.addEventListener('focus', () => { if (session && !document.hidden) refreshAccess(); });
+    document.addEventListener('visibilitychange', () => { if (session && !document.hidden) refreshAccess(); });
+  }
+
+  // Las únicas escrituras de acceso son setRolePermissions y assignRole.
+  const ROLES_QUERY = `query { roles(activeOnly:true) { id code name } }`;
+  const CATALOG_QUERY = `query Matriz { roles(activeOnly:true) { id code name } permissions(activeOnly:true) { id code name } }`;
+  const ROLE_PERMISSIONS_QUERY = `query ListaDelRol($roleId:ID!) { rolePermissions(roleId:$roleId) { isActive permission { id code } } }`;
+  const PREVIEW_QUERY = `query VistaPrevia($input:SetRolePermissionsInput!) { previewRolePermissions(input:$input) { toActivate { code } toDeactivate { code } unchanged { code } finalCount } }`;
+  const SAVE_PERMISSIONS = `mutation GuardarColumna($input:SetRolePermissionsInput!) { setRolePermissions(input:$input) { activated { code } deactivated { code } finalCount changed } }`;
+  const ASSIGN_ROLE = `mutation AsignarPuesto($input:AssignRoleInput!) { assignRole(input:$input) { isActive role { code name } companyUser { id isAdmin } } }`;
+  const CREATE_TRANSACTION = `mutation($input:CreateTransactionInput!) { createTransaction(input:$input) { id } }`;
+  const ROLE_ORDER = ['ADMINISTRADOR','CONTADOR','CAPTURISTA','CONSULTA'];
+  const PERMISSION_GROUPS = [
+    ['Usuarios',['company.users.read','company.users.write']],
+    ['Cuentas',['accounts.read','accounts.write']],
+    ['Conceptos',['concepts.read','concepts.write']],
+    ['Movimientos',['transactions.read','transactions.write']],
+    ['Roles',['roles.read','roles.write']]
+  ];
+  let adminRoles = [];
+  let matrix = null;
+  let rolePreview = null;
+  let matrixBusy = false;
+  let transactionKey = null;
+  let transactionConcepts = [];
+
+  function orderedRoles(roles) {
+    return ROLE_ORDER.map(code => roles.find(role => role.code === code)).filter(Boolean);
+  }
+
+  async function refreshAccess() {
+    const old = viewer && JSON.stringify([viewer.roleCode, viewer.permissions]);
+    if (await loadViewer() && old !== JSON.stringify([viewer.roleCode, viewer.permissions])) {
+      if (section === 'admin') await switchSection('admin');
+      else loadBalance();
+    }
+  }
+
+  function roleCell(user) {
+    const cell = el('td', {}, [el('span', {text:user.role || 'Sin rol'})]);
+    if (!permitted('roles.write') || !user.isActive || !adminRoles.length) return cell;
+    const select = el('select', {'aria-label':`Rol de ${user.user.name}`}, [
+      el('option', {value:'',text:'Selecciona un rol'}),
+      ...adminRoles.map(role => el('option', {value:role.id,text:role.name}))
+    ]);
+    const previous = adminRoles.find(role => role.code === user.role);
+    select.value = previous ? previous.id : '';
+    const button = el('button', {type:'button',class:'admin-small-action',text:'Guardar rol'});
+    const controls = el('div', {class:'role-selector'}, [select,button]);
+    button.addEventListener('click', async () => {
+      if (!select.value) return;
+      const token = session && session.token;
+      const current = adminRequest;
+      button.disabled = select.disabled = true;
+      adminMessage('');
+      try {
+        const data = await adminQuery(ASSIGN_ROLE, {input:{companyUserId:user.id,roleId:select.value}});
+        if (!session || token !== session.token || current !== adminRequest) return;
+        user.role = data.assignRole.role.code;
+        user.isAdmin = data.assignRole.companyUser.isAdmin;
+        renderAdminUsers();
+        adminMessage(`Puesto guardado: ${user.user.name} · ${data.assignRole.role.name}. Administrador principal: ${user.isAdmin ? 'Sí' : 'No'}.`, true);
+        await refreshAccess();
+      } catch (err) {
+        if (session && session.token === token && current === adminRequest) {
+          select.value = previous ? previous.id : '';
+          adminError(err);
+        }
+      } finally {button.disabled = select.disabled = false;}
+    });
+    cell.append(controls);
+    return cell;
+  }
+
+  async function loadMatrix(current) {
+    matrix = null;
+    rolePreview = null;
+    $('role-preview').hidden = true;
+    $('matrix-container').replaceChildren();
+    $('matrix-status').textContent = 'Consultando catálogo…';
+    if (!permitted('roles.read')) { $('matrix-status').textContent = 'Tu rol no tiene permiso para ver la matriz.'; return; }
+    const catalog = await adminQuery(CATALOG_QUERY);
+    const roles = orderedRoles(catalog.roles);
+    const permissions = catalog.permissions;
+    if (current !== adminRequest) return;
+    if (roles.length !== 4 || !permissions.length) {
+      $('matrix-status').textContent = 'El catálogo no está cargado: se necesitan los cuatro roles y permisos activos.';
+      return;
+    }
+    const columns = await Promise.all(roles.map(role => adminQuery(ROLE_PERMISSIONS_QUERY, {roleId:role.id})));
+    if (current !== adminRequest) return;
+    matrix = {roles,permissions,drafts:new Map()};
+    roles.forEach((role,index) => matrix.drafts.set(role.id, new Set(columns[index].rolePermissions
+      .filter(row => row.isActive && permissions.some(p => p.id === row.permission.id)).map(row => row.permission.id))));
+    renderMatrix();
+  }
+
+  function renderMatrix() {
+    if (!matrix) return;
+    $('matrix-status').textContent = permitted('roles.write')
+      ? 'Administrador es de solo lectura. Previsualiza y guarda cada columna por separado.'
+      : 'Solo lectura. Tu puesto permite consultar la matriz.';
+    const table = el('table', {class:'permissions-matrix'});
+    const head = el('tr', {}, [el('th', {scope:'col',text:'Permiso'})]);
+    matrix.roles.forEach(role => head.append(el('th', {scope:'col'}, [
+      el('span', {text:role.name}), el('code', {text:role.code}),
+      ...(role.code === 'ADMINISTRADOR' ? [el('small', {text:'Solo lectura'})] : [])
+    ])));
+    table.append(el('thead', {}, [head]));
+    const body = el('tbody');
+    for (const [group,codes] of PERMISSION_GROUPS) {
+      const permissions = codes.map(code => matrix.permissions.find(p => p.code === code)).filter(Boolean);
+      if (!permissions.length) continue;
+      body.append(el('tr', {class:'permission-group'}, [el('th', {scope:'rowgroup',colspan:'5',text:group})]));
+      permissions.forEach(permission => {
+        const row = el('tr', {'data-permission':permission.code}, [el('th', {scope:'row'}, [
+          el('span', {text:permission.name}), el('code', {text:permission.code})
+        ])]);
+        matrix.roles.forEach(role => {
+          const checked = matrix.drafts.get(role.id).has(permission.id);
+          const input = el('input', {type:'checkbox','data-role':role.code,'aria-label':`${role.name}: ${permission.name}`});
+          input.checked = checked;
+          input.disabled = matrixBusy || role.code === 'ADMINISTRADOR' || !permitted('roles.write');
+          const value = el('span', {text:checked ? 'Sí' : 'No'});
+          input.addEventListener('change', () => {
+            const draft = matrix.drafts.get(role.id);
+            if (input.checked) draft.add(permission.id); else draft.delete(permission.id);
+            value.textContent = input.checked ? 'Sí' : 'No';
+            rolePreview = null;
+            $('role-preview').hidden = true;
+            $('matrix-status').textContent = 'Cambios pendientes. Consulta la vista previa antes de guardar.';
+          });
+          row.append(el('td', {}, [el('label', {class:'permission-cell'}, [input,value])]));
+        });
+        body.append(row);
+      });
+    }
+    table.append(body);
+    if (permitted('roles.write')) {
+      const footer = el('tr', {}, [el('td')]);
+      matrix.roles.forEach(role => {
+        const cell = el('td');
+        if (role.code !== 'ADMINISTRADOR') {
+          const preview = el('button', {type:'button',class:'admin-small-action',text:'Vista previa','aria-label':`Vista previa ${role.name}`});
+          preview.disabled = matrixBusy;
+          preview.addEventListener('click', () => previewPermissions(role));
+          cell.append(preview);
+        }
+        footer.append(cell);
+      });
+      table.append(el('tfoot', {}, [footer]));
+    }
+    $('matrix-container').replaceChildren(table);
+  }
+
+  async function previewPermissions(role) {
+    if (!matrix || matrixBusy || !permitted('roles.write') || role.code === 'ADMINISTRADOR') return;
+    const current = adminRequest;
+    const input = {roleId:role.id,permissionIds:[...matrix.drafts.get(role.id)]};
+    matrixBusy = true;
+    rolePreview = null;
+    $('role-preview').hidden = true;
+    adminMessage('');
+    renderMatrix();
+    try {
+      const data = await adminQuery(PREVIEW_QUERY, {input});
+      if (current !== adminRequest) return;
+      rolePreview = {input, current};
+      const plan = data.previewRolePermissions;
+      $('preview-title').textContent = `Vista previa · ${role.name}`;
+      const values = [
+        ['Se van a activar',plan.toActivate.map(p => p.code).join(', ') || 'Ninguno'],
+        ['Se van a desactivar',plan.toDeactivate.map(p => p.code).join(', ') || 'Ninguno'],
+        ['Sin cambio',String(plan.unchanged.length)], ['Total final',String(plan.finalCount)]
+      ];
+      $('preview-summary').replaceChildren(...values.flatMap(([key,value]) => [el('dt', {text:key}),el('dd', {text:value})]));
+      $('save-role-permissions').disabled = false;
+      $('role-preview').hidden = false;
+      $('role-preview').scrollIntoView({block:'nearest'});
+    } catch (err) { if (current === adminRequest) adminError(err); }
+    finally { matrixBusy = false; if (current === adminRequest) renderMatrix(); }
+  }
+
+  async function saveRolePermissions() {
+    if (!rolePreview || matrixBusy || !permitted('roles.write')) return;
+    const preview = rolePreview;
+    matrixBusy = true;
+    $('save-role-permissions').disabled = true;
+    $('discard-role-permissions').disabled = true;
+    renderMatrix();
+    try {
+      const data = await adminQuery(SAVE_PERMISSIONS, {input:preview.input});
+      if (preview.current !== adminRequest) return;
+      const result = data.setRolePermissions;
+      await loadMatrix(preview.current); // Confirma las relaciones guardadas en la base.
+      if (preview.current !== adminRequest) return;
+      adminMessage(result.changed
+        ? `Columna guardada. changed: true · Total final: ${result.finalCount}.`
+        : `Sin cambios. changed: false · Total final: ${result.finalCount}. No se duplicaron relaciones.`, true);
+      await refreshAccess();
+    } catch (err) { if (preview.current === adminRequest) adminError(err); }
+    finally {
+      matrixBusy = false;
+      $('save-role-permissions').disabled = $('discard-role-permissions').disabled = false;
+      if (preview.current === adminRequest) renderMatrix();
+    }
+  }
+
+  function transactionMessage(text) {
+    $('transaction-message').textContent = text;
+    $('transaction-message').hidden = !text;
+    $('transaction-message').classList.toggle('message--success', text === 'Movimiento registrado.');
+  }
+
+  async function openTransactionForm() {
+    if (!permitted('transactions.write')) return;
+    transactionMessage('');
+    transactionKey = crypto.randomUUID();
+    try {
+      const token = session.token;
+      const data = await adminQuery(ADMIN_ACCOUNTS_QUERY, {id:viewer.companyId});
+      if (!session || session.token !== token || !permitted('transactions.write')) return;
+      $('transaction-account').replaceChildren(...data.accounts.filter(a => a.isActive).map(a => el('option', {value:a.id,text:a.name})));
+      $('transaction-form').hidden = false;
+      await loadTransactionConcepts();
+    } catch (err) { transactionMessage(err.message); }
+  }
+
+  async function loadTransactionConcepts() {
+    const account = $('transaction-account').value;
+    transactionConcepts = [];
+    $('transaction-concept').replaceChildren();
+    if (!account) return;
+    const token = session && session.token;
+    try {
+      const data = await adminQuery(ASSIGNED_QUERY, {id:account});
+      if (!session || session.token !== token || account !== $('transaction-account').value) return;
+      transactionConcepts = data.accountConcepts.filter(link => link.isActive).map(link => link.concept);
+      $('transaction-concept').replaceChildren(...transactionConcepts.map(c => el('option', {value:c.id,text:`${c.name} · ${CONCEPT_TYPES[c.conceptType]}`})));
+    } catch (err) { transactionMessage(err.message); }
+  }
+
+  async function submitTransaction(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector('[type="submit"]');
+    if (!form.reportValidity() || !permitted('transactions.write')) return;
+    const data = formObject(form.id);
+    const concept = transactionConcepts.find(c => c.id === data.conceptId);
+    if (!concept) return transactionMessage('Selecciona una cuenta con un concepto asignado.');
+    button.disabled = true;
+    const token = session && session.token;
+    try {
+      await adminQuery(CREATE_TRANSACTION, {input:{...data,transactionType:concept.conceptType,idempotencyKey:transactionKey}});
+      if (!session || session.token !== token) return;
+      form.reset(); form.hidden = true;
+      transactionKey = null;
+      transactionMessage('Movimiento registrado.');
+      loadBalance();
+    } catch (err) {
+      if (err.code === 'UNAUTHENTICATED') adminError(err); else transactionMessage(err.message);
+    } finally { button.disabled = false; }
   }
 
   // ------------------------------------------------------------------

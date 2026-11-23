@@ -24,3 +24,4 @@ env/
 .activity6-other-credentials.json
 .activity7-credentials.json
 !.env.docker.example
+.activity3-credentials.json

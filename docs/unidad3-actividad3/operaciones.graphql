@@ -1,0 +1,35 @@
+# Todas las operaciones protegidas usan Authorization: Bearer TOKEN en Headers.
+# Los IDs se leen del catálogo y de companyUsers; nunca se envía el actor.
+query Matriz {
+  roles(activeOnly: true) { id code name }
+  permissions(activeOnly: true) { id code name }
+}
+query ListaDelRol($roleId: ID!) {
+  rolePermissions(roleId: $roleId) { isActive permission { id code } }
+}
+query VistaPrevia($input: SetRolePermissionsInput!) {
+  previewRolePermissions(input: $input) {
+    toActivate { code }
+    toDeactivate { code }
+    unchanged { code }
+    finalCount
+  }
+}
+mutation GuardarColumna($input: SetRolePermissionsInput!) {
+  setRolePermissions(input: $input) {
+    activated { code }
+    deactivated { code }
+    finalCount
+    changed
+  }
+}
+mutation AsignarPuesto($input: AssignRoleInput!) {
+  assignRole(input: $input) {
+    isActive
+    role { code name }
+    companyUser { id isAdmin }
+  }
+}
+query Usuarios($companyId: ID!) {
+  companyUsers(companyId: $companyId) { id role isAdmin isActive user { name email } }
+}

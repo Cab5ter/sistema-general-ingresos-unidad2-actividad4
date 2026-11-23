@@ -1,0 +1,252 @@
+{
+  "backend": "8.4.7",
+  "baseDePractica": true,
+  "consultas": {
+    "matriz": "SELECT r.code AS roleCode, p.code AS permissionCode, rp.is_active AS isActive FROM role_permissions rp JOIN roles r ON r.id=rp.role_id JOIN permissions p ON p.id=rp.permission_id ORDER BY r.id, p.id",
+    "puestos": "SELECT u.name, cr.role_id AS roleId, r.code AS roleCode, cr.is_active AS isActive, cu.is_admin AS isAdmin FROM company_user_roles cr JOIN company_users cu ON cu.id=cr.company_user_id JOIN users u ON u.id=cu.user_id JOIN roles r ON r.id=cr.role_id ORDER BY cu.id, cr.id",
+    "cuentas": "SELECT name, is_active AS isActive FROM accounts ORDER BY id",
+    "movimientos": "SELECT id, amount, captured_by AS capturedBy, is_active AS isActive FROM transactions ORDER BY id"
+  },
+  "estado": {
+    "matriz": [
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "company.users.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "company.users.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "accounts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "accounts.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "concepts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "concepts.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "transactions.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "transactions.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "roles.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "ADMINISTRADOR",
+        "permissionCode": "roles.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "company.users.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "accounts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "accounts.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "concepts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "concepts.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "transactions.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "transactions.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONTADOR",
+        "permissionCode": "roles.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CAPTURISTA",
+        "permissionCode": "accounts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CAPTURISTA",
+        "permissionCode": "accounts.write",
+        "isActive": 0
+      },
+      {
+        "roleCode": "CAPTURISTA",
+        "permissionCode": "concepts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CAPTURISTA",
+        "permissionCode": "transactions.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CAPTURISTA",
+        "permissionCode": "transactions.write",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONSULTA",
+        "permissionCode": "company.users.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONSULTA",
+        "permissionCode": "accounts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONSULTA",
+        "permissionCode": "concepts.read",
+        "isActive": 1
+      },
+      {
+        "roleCode": "CONSULTA",
+        "permissionCode": "transactions.read",
+        "isActive": 1
+      }
+    ],
+    "puestos": [
+      {
+        "name": "Ana Administradora",
+        "roleId": 1,
+        "roleCode": "ADMINISTRADOR",
+        "isActive": 1,
+        "isAdmin": 1
+      },
+      {
+        "name": "Luis Contador",
+        "roleId": 4,
+        "roleCode": "CONSULTA",
+        "isActive": 0,
+        "isAdmin": 0
+      },
+      {
+        "name": "Luis Contador",
+        "roleId": 2,
+        "roleCode": "CONTADOR",
+        "isActive": 1,
+        "isAdmin": 0
+      },
+      {
+        "name": "María Capturista",
+        "roleId": 4,
+        "roleCode": "CONSULTA",
+        "isActive": 0,
+        "isAdmin": 0
+      },
+      {
+        "name": "María Capturista",
+        "roleId": 3,
+        "roleCode": "CAPTURISTA",
+        "isActive": 1,
+        "isAdmin": 0
+      },
+      {
+        "name": "José Capturista",
+        "roleId": 4,
+        "roleCode": "CONSULTA",
+        "isActive": 0,
+        "isAdmin": 0
+      },
+      {
+        "name": "José Capturista",
+        "roleId": 3,
+        "roleCode": "CAPTURISTA",
+        "isActive": 1,
+        "isAdmin": 0
+      },
+      {
+        "name": "Pedro Consulta",
+        "roleId": 4,
+        "roleCode": "CONSULTA",
+        "isActive": 1,
+        "isAdmin": 0
+      },
+      {
+        "name": "Pedro Consulta",
+        "roleId": 3,
+        "roleCode": "CAPTURISTA",
+        "isActive": 0,
+        "isAdmin": 0
+      }
+    ],
+    "cuentas": [
+      {
+        "name": "Caja de la empresa",
+        "isActive": 1
+      },
+      {
+        "name": "Cuenta creada por María 1795475501077",
+        "isActive": 1
+      },
+      {
+        "name": "Cuenta creada por María 1795475589952",
+        "isActive": 1
+      },
+      {
+        "name": "Cuenta creada por María 1795475675051",
+        "isActive": 1
+      }
+    ],
+    "movimientos": [
+      {
+        "id": 1,
+        "amount": "25.00",
+        "capturedBy": 5,
+        "isActive": 1
+      },
+      {
+        "id": 2,
+        "amount": "25.00",
+        "capturedBy": 5,
+        "isActive": 1
+      },
+      {
+        "id": 3,
+        "amount": "25.00",
+        "capturedBy": 5,
+        "isActive": 1
+      }
+    ]
+  }
+}

@@ -1,3 +1,13 @@
+# Sistema General de Ingresos · Unidad III · Actividad 3
+
+Matriz de roles y permisos y asignación de puestos en el mismo dashboard administrativo.
+
+- [Inicio, usuarios y comprobación de la actividad 3](docs/unidad3-actividad3/README.md)
+- [Capturas y resultados de pruebas](docs/unidad3-actividad3/evidencias.md)
+- ZIP: `python scripts/package_unidad3_actividad3.py`
+
+## Historial de actividades
+
 # Sistema General de Ingresos · Unidad III · Actividad 2
 
 Continuación del proyecto anterior: idempotencia de `createTransaction` y dashboard administrativo en la misma aplicación.

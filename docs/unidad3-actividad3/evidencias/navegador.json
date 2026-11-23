@@ -1,0 +1,17 @@
+{
+  "backend": "MySQL 8.4.7",
+  "checks": [
+    "Matriz inicial: 40 celdas cotejadas con relaciones activas del API.",
+    "Capturista sin Usuarios, sin matriz y sin Nueva cuenta; query roles rechazada por el API.",
+    "Vista previa: activa accounts.write, 0 desactivaciones, 4 sin cambio, total 5; MySQL confirma la relación.",
+    "Dos capturistas ven Nueva cuenta con sus tokens anteriores; María crea una cuenta desde el cliente.",
+    "Pedro cambia Consulta → Capturista, isAdmin sigue No, la matriz Consulta queda igual y su mismo JWT registra un movimiento.",
+    "Segundo guardado: changed false, total 5, sin duplicar relaciones.",
+    "Contador ve la matriz completa sin casillas editables ni controles de guardado.",
+    "Revocación: desaparece Nueva cuenta para ambos capturistas; la cuenta creada se conserva.",
+    "Prueba adicional con respuesta de rechazo simulada: el selector recupera el puesto anterior.",
+    "Móvil de 390 px: matriz con desplazamiento interno y sin desbordar la página."
+  ],
+  "estado": "correcto",
+  "tokensIncluidos": false
+}

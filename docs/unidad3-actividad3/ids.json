@@ -1,0 +1,18 @@
+{
+  "companyId": "1",
+  "members": {
+    "admin": "1",
+    "contador": "2",
+    "capturista": "3",
+    "capturista2": "4",
+    "consulta": "5"
+  },
+  "roles": {
+    "ADMINISTRADOR": "1",
+    "CONTADOR": "2",
+    "CAPTURISTA": "3",
+    "CONSULTA": "4"
+  },
+  "accountId": "1",
+  "conceptId": "1"
+}
